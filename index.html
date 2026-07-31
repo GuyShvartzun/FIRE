@@ -79,8 +79,9 @@ body{
 
 /* ---------- layout ---------- */
 .layout{display:grid; grid-template-columns:390px 1fr; gap:22px; align-items:start;}
+.layout > main, .layout > .sidebar{min-width:0;}
 .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
-  box-shadow:var(--shadow); padding:22px;}
+  box-shadow:var(--shadow); padding:22px; min-width:0;}
 .card + .card{margin-top:22px;}
 .card-h{display:flex; align-items:center; gap:10px; margin:0 0 18px; flex-wrap:wrap;}
 .card-h .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
@@ -260,9 +261,38 @@ tbody tr:hover{background:var(--surface-2);}
   .field .lab{font-size:.82rem;}
   .tbl-note{font-size:.76rem;padding:10px 12px;}
   .foot{font-size:.74rem;padding:15px;}
-  table{font-size:.82rem;}
-  thead th, tbody td{padding:9px 9px;}
-  .matrix{font-size:.75rem;}
+
+  /* ---- proof table -> stacked cards (no horizontal scroll) ---- */
+  .tbl-scroll{overflow-x:visible;border:none;border-radius:0;}
+  #proofTbl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+  #proofTbl, #proofTbl tbody, #proofTbl tr, #proofTbl td{display:block;width:100%;}
+  #proofTbl tr{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:6px 14px;margin-bottom:12px;box-shadow:var(--shadow-sm);
+  }
+  #proofTbl tr:hover{background:var(--surface-2);}
+  #proofTbl td{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:9px 0;border-bottom:1px solid var(--line-2);white-space:normal;text-align:end;
+  }
+  #proofTbl td:last-child{border-bottom:none;}
+  #proofTbl td::before{
+    content:attr(data-label);font-size:.78rem;font-weight:600;color:var(--muted);
+    text-align:start;flex:0 0 auto;
+  }
+  #proofTbl td.tbl-num{direction:rtl;}
+  #proofTbl td.tbl-num > *{direction:ltr;}
+  #proofTbl td .sub-nom{display:inline;font-size:.7rem;margin-inline-start:6px;}
+  #proofTbl td.cell-year{
+    background:var(--brand-soft);margin:-6px -14px 4px;padding:9px 14px;
+    border-bottom:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;
+    justify-content:center;font-weight:700;color:var(--brand);
+  }
+  #proofTbl td.cell-year::before{content:none;}
+
+  /* ---- matrix: scroll ONLY inside its own box ---- */
+  .matrix-wrap{max-width:100%;-webkit-overflow-scrolling:touch;}
+  .matrix{font-size:.74rem;min-width:440px;}
   .matrix th,.matrix td{padding:8px 6px;}
 }
 
@@ -484,8 +514,14 @@ const nf1 = new Intl.NumberFormat('he-IL', {maximumFractionDigits:1});
 function shekel(v){ const s = nf.format(Math.abs(Math.round(v))); return (v<0?'(':'')+'₪'+s+(v<0?')':''); }
 function shekelShort(v){
   const a=Math.abs(v);
-  if(a>=1e6) return (v<0?'-':'')+'₪'+nf1.format(a/1e6)+' מיליון';
-  if(a>=1e4) return (v<0?'-':'')+'₪'+nf.format(Math.round(a/1e3))+' אלף';
+  const sign=v<0?'-':'';
+  // promote to millions if rounding the thousands would reach 1,000k
+  if(a>=1e6 || Math.round(a/1e3)>=1000){
+    return sign+'₪'+nf1.format(a/1e6)+' מיליון';
+  }
+  if(a>=1e4){
+    return sign+'₪'+nf.format(Math.round(a/1e3))+' אלף';
+  }
   return shekel(v);
 }
 function pctS(v,d=1){ return (v*100).toFixed(d)+'%'; }
@@ -711,14 +747,14 @@ function render(){
     const rowDfac=Math.pow(1+P.inf, T + (r.y-1));
     const netRealRow=r.net/rowDfac;
     return `<tr>
-    <td>שנה ${r.y}</td>
-    <td class="tbl-num">${shekel(r.start)}</td>
-    <td class="tbl-num pos">${shekel(r.grossRet)}</td>
-    <td class="tbl-num">${shekel(r.gross)}</td>
-    <td class="tbl-num neg">${shekel(-r.tax)}</td>
-    <td class="tbl-num pos">${shekel(r.net)}<span class="sub-nom">≈ ${shekel(netRealRow)} בערכי היום</span></td>
-    <td class="tbl-num">${shekel(r.end)}</td>
-    <td><span class="pill zero">${(r.realGrowth*100).toFixed(2)}%</span></td>
+    <td data-label="שנה" class="cell-year">שנה ${r.y}</td>
+    <td class="tbl-num" data-label="יתרת פתיחה">${shekel(r.start)}</td>
+    <td class="tbl-num pos" data-label="תשואה ברוטו">${shekel(r.grossRet)}</td>
+    <td class="tbl-num" data-label="משיכה גולמית">${shekel(r.gross)}</td>
+    <td class="tbl-num neg" data-label="מס רווח הון">${shekel(-r.tax)}</td>
+    <td class="tbl-num pos" data-label="משיכה נטו ביד">${shekel(r.net)}<span class="sub-nom">≈ ${shekel(netRealRow)} בערכי היום</span></td>
+    <td class="tbl-num" data-label="יתרת סגירה">${shekel(r.end)}</td>
+    <td data-label="צמיחה ריאלית"><span class="pill zero">${(r.realGrowth*100).toFixed(2)}%</span></td>
   </tr>`;}).join('');
 
   buildMatrix(P);
