@@ -26,7 +26,7 @@
   --r-sm:10px; --r:14px; --r-lg:20px; --r-xl:26px;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+html,body{margin:0;padding:0;overflow-x:hidden;max-width:100%;}
 body{
   font-family:'Heebo',system-ui,-apple-system,'Segoe UI',sans-serif;
   color:var(--ink); line-height:1.6; min-height:100vh; font-size:15px;
@@ -205,32 +205,75 @@ tbody tr:hover{background:var(--surface-2);}
 .tip b{color:var(--brand);}
 
 /* ============ RESPONSIVE ============ */
+/* large desktop -> 4 KPI cols is default */
 @media(max-width:1200px){ .kpi-grid{grid-template-columns:repeat(3,1fr);} }
+
+/* tablet: single column layout, sidebar on top */
 @media(max-width:1024px){
+  .wrap{max-width:820px;}
   .layout{grid-template-columns:1fr;}
   .sidebar{position:static;}
+  .sidebar .card{max-width:100%;}
 }
-@media(max-width:680px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
-@media(max-width:560px){
-  .wrap{padding:16px 12px 50px;}
-  .masthead{padding:16px 18px;border-radius:20px;gap:13px;margin-bottom:14px;}
-  .mh-logo{width:46px;height:46px;font-size:23px;border-radius:14px;}
-  .mh-title h1{font-size:1.18rem;}
-  .mh-title p{font-size:.82rem;}
-  .convention{padding:11px 13px;font-size:.83rem;}
-  .hero{padding:16px;}
-  .hero .verdict{font-size:.98rem;flex-basis:100%;}
-  .hero-mini{width:100%;}
-  .hero-mini .m{flex:1;min-width:0;}
-  .card{padding:16px;border-radius:16px;}
-  .card-h h2{font-size:1rem;}
-  .card-h .sub{margin-inline-start:0;flex-basis:100%;}
-  .kpi .k-val{font-size:1.22rem;}
-  .kpi .k-val.sm{font-size:1.05rem;}
-  .chart-box{height:270px;}
+
+/* small tablet / large phone */
+@media(max-width:768px){
+  .wrap{padding:20px 16px 56px;}
+  .kpi-grid{grid-template-columns:repeat(3,1fr);gap:12px;}
+  .card-h .sub{margin-inline-start:auto;}
+}
+
+/* phones */
+@media(max-width:600px){
+  .wrap{padding:14px 12px 48px;}
+  .masthead{padding:15px 16px;border-radius:18px;gap:12px;margin-bottom:14px;}
+  .mh-logo{width:44px;height:44px;font-size:22px;border-radius:13px;}
+  .mh-title h1{font-size:1.14rem;line-height:1.25;}
+  .mh-title p{font-size:.8rem;}
+  .convention{padding:11px 13px;font-size:.82rem;gap:9px;margin-bottom:14px;}
+  .convention .c-ic{width:26px;height:26px;font-size:14px;}
+  .hero{padding:15px;gap:14px;margin-bottom:14px;}
+  .hero .verdict{font-size:.96rem;flex-basis:100%;}
+  .hero-mini{width:100%;gap:10px;}
+  .hero-mini .m{flex:1;min-width:0;padding:9px 10px;}
+  .hero-mini .m .v{font-size:1.05rem;}
+  .card{padding:15px;border-radius:16px;}
+  .card + .card{margin-top:16px;}
+  .card-h{gap:9px;margin-bottom:15px;}
+  .card-h .ic{width:30px;height:30px;font-size:15px;}
+  .card-h h2{font-size:.98rem;}
+  /* card subtitle & segmented control go full width below the title */
+  .card-h .sub{margin-inline-start:0;flex-basis:100%;font-size:.76rem;}
+  .seg{display:flex;width:100%;}
+  .seg button{flex:1;padding:8px 6px;font-size:.78rem;text-align:center;}
+  /* KPI: 2 columns on phones */
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .kpi{padding:13px 13px;}
+  .kpi .k-lbl{font-size:.72rem;}
+  .kpi .k-val{font-size:1.15rem;}
+  .kpi .k-val.sm{font-size:1rem;}
+  .kpi .k-nom{font-size:.68rem;padding:3px 7px;}
+  .kpi .k-sub{font-size:.68rem;}
+  .chart-box{height:250px;}
+  .chart-legend{gap:10px 14px;font-size:.76rem;margin-top:12px;}
   .two{gap:10px;}
+  .field .lab{font-size:.82rem;}
+  .tbl-note{font-size:.76rem;padding:10px 12px;}
+  .foot{font-size:.74rem;padding:15px;}
+  table{font-size:.82rem;}
+  thead th, tbody td{padding:9px 9px;}
+  .matrix{font-size:.75rem;}
+  .matrix th,.matrix td{padding:8px 6px;}
 }
-@media(max-width:400px){ .kpi-grid{grid-template-columns:1fr;} }
+
+/* narrow phones -> 1 KPI column */
+@media(max-width:430px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .hero-mini{flex-wrap:wrap;}
+  .hero-mini .m{flex:1 1 calc(50% - 5px);}
+  .mh-title h1{font-size:1.06rem;}
+  .kpi .k-val{font-size:1.25rem;}
+}
 </style>
 </head>
 <body>
