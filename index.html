@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחשבון חופש כלכלי (FIRE) מתקדם</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --acc:#22d3ee; --acc2:#34d399;
+    --txt:#e2e8f0; --muted:#94a3b8; --line:#334155; --warn:#fbbf24; --danger:#f87171;
+    --grad:linear-gradient(135deg,#22d3ee 0%,#34d399 100%);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#134e5e33,transparent),var(--bg);
+    color:var(--txt);font-family:"Segoe UI",Arial,Heebo,sans-serif;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+  header h1{font-size:30px;margin:0 0 4px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+  header p{color:var(--muted);margin:0 0 22px;font-size:15px}
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:22px}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 8px 30px #0006}
+  .card h2{margin:0 0 16px;font-size:17px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:6px;height:20px;background:var(--grad);border-radius:4px;display:inline-block}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+  .field .hint{font-size:11px;color:#64748b}
+  .field input,.field select{width:100%;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;color:var(--txt);font-size:14px;outline:none;transition:.15s}
+  .field input:focus,.field select:focus{border-color:var(--acc);box-shadow:0 0 0 3px #22d3ee22}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .toggle{display:flex;align-items:center;gap:10px;background:var(--panel2);padding:10px 12px;border-radius:10px;border:1px solid var(--line);margin-bottom:14px}
+  .toggle input{width:auto}
+  .adv{border-top:1px dashed var(--line);margin-top:8px;padding-top:12px}
+  .adv summary{cursor:pointer;color:var(--acc);font-size:13px;font-weight:600;margin-bottom:10px}
+  button.calc{width:100%;padding:14px;border:0;border-radius:12px;background:var(--grad);color:#062;font-weight:800;
+    font-size:16px;cursor:pointer;margin-top:8px;transition:.15s}
+  button.calc:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  /* results */
+  .headline{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+  @media(max-width:560px){.headline{grid-template-columns:1fr}}
+  .kpi{background:linear-gradient(135deg,#1e293b,#0f2836);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+  .kpi .lbl{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .kpi .val{font-size:26px;font-weight:800;color:#fff}
+  .kpi .sub{font-size:12px;color:var(--acc2);margin-top:4px}
+  .kpi.big .val{font-size:30px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12px}
+  tr:hover td{background:#ffffff08}
+  .pos{color:var(--acc2)} .neg{color:var(--danger)} .mut{color:var(--muted)}
+  canvas{width:100%;height:230px;margin-top:8px}
+  .sec{margin-top:22px}
+  .sec h3{font-size:15px;margin:0 0 6px;color:#fff}
+  .sec .desc{font-size:12px;color:var(--muted);margin:0 0 6px}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#22d3ee22;color:var(--acc);margin-inline-start:6px}
+  .placeholder{color:var(--muted);text-align:center;padding:60px 20px}
+  .err{background:#f8717122;border:1px solid var(--danger);color:#fecaca;padding:12px;border-radius:10px;font-size:13px}
+  .note{font-size:11px;color:#64748b;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>מחשבון חופש כלכלי (FIRE) מתקדם 🔥</h1>
+    <p>חישוב מבוסס מתמטיקה פיננסית — ריבית-דריבית חודשית, שחיקת מס לפי פיצול קרן/רווח, וניכוי דמי ניהול.</p>
+  </header>
+
+  <div class="grid">
+    <!-- ==================== INPUTS ==================== -->
+    <div class="card">
+      <h2>פרמטרים</h2>
+
+      <div class="toggle">
+        <input type="checkbox" id="isReal" checked>
+        <label for="isReal" style="margin:0;color:var(--txt);font-size:13px">התשואות שהוזנו הן <b>ריאליות</b> (מנוכות אינפלציה)</label>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>מטבע</label>
+          <select id="cur"><option value="₪">₪ ש"ח</option><option value="$">$ דולר</option></select>
+        </div>
+        <div class="field">
+          <label>גיל נוכחי</label>
+          <input type="number" id="age" value="30">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>1. הון התחלתי קיים</label>
+        <input type="number" id="P0" value="100000">
+      </div>
+      <div class="field">
+        <label>2. הפקדה חודשית שוטפת</label>
+        <input type="number" id="C" value="5000">
+      </div>
+      <div class="field">
+        <label>3. סכום משיכה חודשי נקי מבוקש (נטו ביד)</label>
+        <input type="number" id="Wnet" value="12000">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>4. תשואה שנתית — צבירה</label>
+          <input type="number" step="0.1" id="rAcc" value="7"><span class="hint">% (ברירת מחדל 7%)</span>
+        </div>
+        <div class="field">
+          <label>5. תשואה שנתית — משיכה</label>
+          <input type="number" step="0.1" id="rWd" value="5"><span class="hint">% (ברירת מחדל 5%)</span>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>6. אינפלציה שנתית</label>
+          <input type="number" step="0.1" id="infl" value="2.5"><span class="hint">% (רלוונטי במצב נומינלי)</span>
+        </div>
+        <div class="field">
+          <label>7. מס רווח הון</label>
+          <input type="number" step="0.1" id="tax" value="25"><span class="hint">% (ברירת מחדל 25%)</span>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>8. שיעור משיכה בטוח (SWR)</label>
+          <input type="number" step="0.1" id="swr" value="4"><span class="hint">% (ברירת מחדל 4%)</span>
+        </div>
+        <div class="field">
+          <label>9. דמי ניהול שנתיים</label>
+          <input type="number" step="0.01" id="fee" value="0.5"><span class="hint">% (ברירת מחדל 0.5%)</span>
+        </div>
+      </div>
+
+      <details class="adv">
+        <summary>10. שינויים צפויים בעתיד (אופציונלי)</summary>
+        <div class="field">
+          <label>סכום חד-פעמי #1 (קרן השתלמות / ירושה)</label>
+          <div class="row2">
+            <input type="number" id="one1amt" placeholder="סכום" value="">
+            <input type="number" id="one1yr" placeholder="בשנה מס'" value="">
+          </div>
+        </div>
+        <div class="field">
+          <label>סכום חד-פעמי #2</label>
+          <div class="row2">
+            <input type="number" id="one2amt" placeholder="סכום" value="">
+            <input type="number" id="one2yr" placeholder="בשנה מס'" value="">
+          </div>
+        </div>
+        <div class="field">
+          <label>שינוי בהפקדה החודשית</label>
+          <div class="row2">
+            <input type="number" id="cChgAmt" placeholder="הפקדה חדשה" value="">
+            <input type="number" id="cChgYr" placeholder="החל משנה" value="">
+          </div>
+        </div>
+      </details>
+
+      <button class="calc" onclick="run()">חשב את תאריך החופש הכלכלי ←</button>
+      <div class="note">כל התוצאות מוצגות בערכים ריאליים (כוח קנייה של היום). המשיכה החודשית נשמרת קבועה במונחים ריאליים לאורך זמן. מחשבון זה אינו מהווה ייעוץ פיננסי.</div>
+    </div>
+
+    <!-- ==================== RESULTS ==================== -->
+    <div class="card" id="results">
+      <h2>תוצאות</h2>
+      <div class="placeholder">הזן את הפרמטרים ולחץ על "חשב" כדי לראות את השורה התחתונה, יעד הקרן, אבני הדרך וניתוח הרגישות.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const num = id => parseFloat(document.getElementById(id).value)||0;
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const fmtM = n => { // compact
+  const a=Math.abs(n);
+  if(a>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(a>=1e3) return Math.round(n/1e3)+'K';
+  return Math.round(n).toString();
+};
+let CUR='₪';
+
+/* monthly REAL net rate: inflation cancels in real mode; fee is a haircut */
+function monthlyRealNet(annual, fee, infl, isReal){
+  const r=annual/100, f=fee/100, i=infl/100;
+  let realNet;
+  if(isReal){ realNet = (1+r)*(1-f) - 1; }
+  else { realNet = (1+r)*(1-f)/(1+i) - 1; }
+  return Math.pow(1+realNet, 1/12) - 1;
+}
+
+/* accumulation simulation until target reached (all real terms) */
+function simulate(P0,C,mRate,target,cfg){
+  let P=P0, basis=P0, month=0, contrib=C;
+  const series=[{m:0,P:P0}];
+  const maxM=1200;
+  while(P<target && month<maxM){
+    month++;
+    // contribution change
+    if(cfg.cChgYr>0 && month===Math.round(cfg.cChgYr*12)) contrib=cfg.cChgAmt;
+    // growth
+    P = P*(1+mRate);
+    // one-offs
+    if(cfg.one1yr>0 && month===Math.round(cfg.one1yr*12)){P+=cfg.one1amt; basis+=cfg.one1amt;}
+    if(cfg.one2yr>0 && month===Math.round(cfg.one2yr*12)){P+=cfg.one2amt; basis+=cfg.one2amt;}
+    // contribution
+    P+=contrib; basis+=contrib;
+    series.push({m:month,P:P});
+  }
+  return {reached:P>=target, months:month, P, basis, series};
+}
+
+/* full FIRE computation with tax fixed-point on embedded gain fraction */
+function computeFIRE(p){
+  const mAcc = monthlyRealNet(p.rAcc, p.fee, p.infl, p.isReal);
+  const tax=p.tax/100, swr=p.swr/100;
+  let g=0.5, res=null;
+  for(let it=0; it<80; it++){
+    const grossAnnual = (p.Wnet*12)/(1 - g*tax);
+    const target = grossAnnual/swr;
+    const sim = simulate(p.P0, p.C, mAcc, target, p);
+    if(!sim.reached){ return {reached:false, target, mAcc}; }
+    const gNew = Math.max(0,(sim.P - sim.basis)/sim.P);
+    res={reached:true, target, months:sim.months, P:sim.P, basis:sim.basis, g:gNew,
+         series:sim.series, grossAnnual, mAcc};
+    if(Math.abs(gNew-g)<1e-6) break;
+    g=gNew;
+  }
+  return res;
+}
+
+/* value at given month from series (nearest) */
+function valAt(series, month){
+  if(month>=series.length) return null;
+  return series[month].P;
+}
+
+function run(){
+  CUR=document.getElementById('cur').value;
+  const p={
+    P0:num('P0'), C:num('C'), Wnet:num('Wnet'), rAcc:num('rAcc'), rWd:num('rWd'),
+    infl:num('infl'), tax:num('tax'), swr:num('swr'), fee:num('fee'), age:num('age'),
+    isReal:document.getElementById('isReal').checked,
+    one1amt:num('one1amt'), one1yr:num('one1yr'),
+    one2amt:num('one2amt'), one2yr:num('one2yr'),
+    cChgAmt:num('cChgAmt'), cChgYr:num('cChgYr')
+  };
+  const R=computeFIRE(p);
+  const el=document.getElementById('results');
+
+  if(!R.reached){
+    el.innerHTML=`<h2>תוצאות</h2><div class="err">⚠️ עם הפרמטרים הנוכחיים לא ניתן להגיע ליעד הקרן (${CUR}${fmt(R.target)}) בתוך 100 שנה.<br>ההפקדה החודשית או התשואה נמוכות מדי ביחס למשיכה המבוקשת. נסה להגדיל הפקדה / להקטין משיכה.</div>`;
+    return;
+  }
+
+  const yrs=Math.floor(R.months/12), mos=R.months%12;
+  const ageAtFire=(p.age + R.months/12);
+  const ageWhole=Math.floor(ageAtFire), ageMo=Math.round((ageAtFire-ageWhole)*12);
+
+  /* milestones */
+  const msMonths=[12,36,60,120].filter(m=>m<=R.months);
+  let msRows='';
+  msMonths.forEach(m=>{
+    const v=valAt(R.series,m);
+    if(v!=null) msRows+=`<tr><td>שנה ${m/12}</td><td>${CUR}${fmt(v)}</td><td class="mut">${(v/R.target*100).toFixed(0)}% מהיעד</td></tr>`;
+  });
+  msRows+=`<tr style="font-weight:700"><td class="pos">🎯 יעד FIRE (שנה ${(R.months/12).toFixed(1)})</td><td class="pos">${CUR}${fmt(R.P)}</td><td class="pos">100%</td></tr>`;
+
+  /* sensitivity */
+  const base=R.months/12;
+  function scen(mod){ const q={...p,...mod}; const r=computeFIRE(q); return r.reached? r.months/12 : null; }
+  const sHi=scen({rAcc:p.rAcc+2});
+  const sLo=scen({rAcc:p.rAcc-2});
+  const sAdv=scen({tax:p.tax+5, infl:p.infl+1});
+  const dTxt=(v)=>{ if(v==null) return '<span class="neg">לא מושג</span>';
+    const d=v-base; const s=d>0?'+':''; const cls=d>0?'neg':'pos';
+    return `${v.toFixed(1)} שנים <span class="${cls}">(${s}${d.toFixed(1)})</span>`; };
+
+  /* net-vs-gross withdrawal explainer */
+  const grossM=R.grossAnnual/12;
+  const taxDrag=(1-R.Wnet/grossM)*100;
+
+  el.innerHTML=`
+    <h2>תוצאות</h2>
+    <div class="headline">
+      <div class="kpi big">
+        <div class="lbl">⏳ שורה תחתונה — זמן עד לחופש כלכלי</div>
+        <div class="val">${yrs} שנים ${mos} חוד'</div>
+        <div class="sub">גיל מוערך בהגעה: ${ageWhole} ו-${ageMo} חוד'</div>
+      </div>
+      <div class="kpi">
+        <div class="lbl">🎯 יעד הקרן הנדרש (ברוטו)</div>
+        <div class="val">${CUR}${fmt(R.target)}</div>
+        <div class="sub">מגן ממס ומאינפלציה • משיכה ${CUR}${fmt(p.Wnet)}/חוד' נטו</div>
+      </div>
+    </div>
+
+    <div class="headline">
+      <div class="kpi">
+        <div class="lbl">משיכה חודשית ברוטו נדרשת</div>
+        <div class="val" style="font-size:22px">${CUR}${fmt(grossM)}</div>
+        <div class="sub">שחיקת מס אפקטיבית: ${taxDrag.toFixed(1)}% • שיעור רווח מגולם בתיק: ${(R.g*100).toFixed(0)}%</div>
+      </div>
+      <div class="kpi">
+        <div class="lbl">סה"כ הפקדות עד ליעד (קרן)</div>
+        <div class="val" style="font-size:22px">${CUR}${fmt(R.basis)}</div>
+        <div class="sub">מתוכו רווחי השקעה: ${CUR}${fmt(R.P-R.basis)}</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>📈 מסלול צמיחת התיק <span class="badge">ערכים ריאליים</span></h3>
+      <canvas id="chart"></canvas>
+    </div>
+
+    <div class="sec">
+      <h3>🧱 טבלת אבני דרך (Milestones)</h3>
+      <table><thead><tr><th>תקופה</th><th>שווי תיק (ריאלי)</th><th>התקדמות</th></tr></thead><tbody>${msRows}</tbody></table>
+    </div>
+
+    <div class="sec">
+      <h3>🔀 ניתוח רגישות</h3>
+      <p class="desc">בסיס: ${base.toFixed(1)} שנים. כיצד משתנה מועד היעד בתרחישים שונים:</p>
+      <table><thead><tr><th>תרחיש</th><th>זמן ליעד</th></tr></thead><tbody>
+        <tr><td>תשואת צבירה גבוהה ב-2% (${(p.rAcc+2).toFixed(1)}%)</td><td>${dTxt(sHi)}</td></tr>
+        <tr><td>תשואת צבירה נמוכה ב-2% (${(p.rAcc-2).toFixed(1)}%)</td><td>${dTxt(sLo)}</td></tr>
+        <tr><td>מס ואינפלציה מפתיעים לרעה (מס +5%, אינפלציה +1%)</td><td>${dTxt(sAdv)}</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="note">
+      <b>מתודולוגיה:</b> יעד הקרן חושב לפי כלל המשיכה הבטוחה (SWR): יעד = משיכה שנתית ברוטו ÷ SWR.
+      המשיכה הברוטו מחושבת מהמשיכה הנטו המבוקשת ע"י פיצול התיק לרכיב קרן (פטור ממס) ולרכיב רווח (חייב במס),
+      כך שהסכום המבוקש מתקבל נטו ביד. דמי הניהול מנוכים מהתשואה הברוטו, והצבירה מחושבת בריבית-דריבית חודשית.
+    </div>
+  `;
+
+  drawChart(R.series, R.target);
+}
+
+/* ---------- lightweight canvas line chart ---------- */
+function drawChart(series, target){
+  const cv=document.getElementById('chart');
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth, H=230;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  const padL=54,padR=16,padT=16,padB=26;
+  const n=series.length;
+  const maxY=Math.max(target, series[n-1].P)*1.05;
+  const x=i=> padL + (W-padL-padR)*(series[i].m/series[n-1].m || 0);
+  const y=v=> H-padB - (H-padT-padB)*(v/maxY);
+
+  ctx.clearRect(0,0,W,H);
+  // grid + y labels
+  ctx.strokeStyle='#33415577'; ctx.fillStyle='#94a3b8'; ctx.font='11px Segoe UI'; ctx.textAlign='right';
+  for(let k=0;k<=4;k++){
+    const val=maxY*k/4, yy=y(val);
+    ctx.beginPath();ctx.moveTo(padL,yy);ctx.lineTo(W-padR,yy);ctx.stroke();
+    ctx.fillText(CUR+fmtM(val), padL-6, yy+4);
+  }
+  // target line
+  ctx.strokeStyle='#34d399'; ctx.setLineDash([5,4]); ctx.beginPath();
+  ctx.moveTo(padL,y(target));ctx.lineTo(W-padR,y(target));ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#34d399'; ctx.textAlign='left'; ctx.fillText('יעד', padL+4, y(target)-4);
+  // area + line
+  const grad=ctx.createLinearGradient(0,padT,0,H-padB);
+  grad.addColorStop(0,'#22d3ee55'); grad.addColorStop(1,'#22d3ee05');
+  ctx.beginPath(); ctx.moveTo(x(0),y(series[0].P));
+  for(let i=1;i<n;i++) ctx.lineTo(x(i),y(series[i].P));
+  ctx.lineTo(x(n-1),H-padB); ctx.lineTo(x(0),H-padB); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x(0),y(series[0].P));
+  for(let i=1;i<n;i++) ctx.lineTo(x(i),y(series[i].P));
+  ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2.5; ctx.stroke();
+  // x labels (years)
+  ctx.fillStyle='#94a3b8'; ctx.textAlign='center';
+  const totYears=series[n-1].m/12;
+  const step=totYears<=6?1:(totYears<=15?2:5);
+  for(let yr=0; yr<=totYears; yr+=step){
+    const mi=Math.min(n-1,Math.round(yr*12));
+    ctx.fillText(yr+'ש', x(mi), H-8);
+  }
+}
+
+/* run once with defaults */
+window.addEventListener('load', run);
+</script>
+</body>
+</html>
