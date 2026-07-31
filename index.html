@@ -433,9 +433,9 @@ tbody tr:hover{background:var(--surface-2);}
           <div class="toggle-row">
             <div class="t-lab">🎯 חישוב הפקדה לגיל פרישה יעד
               <span class="info" title="הפעל כדי לגלות כמה עליך להפקיד בחודש כדי לפרוש בגיל מסוים.">?</span></div>
-            <label class="switch"><input type="checkbox" id="useTargetAge"><span class="slider"></span></label>
+            <label class="switch"><input type="checkbox" id="useTargetAge" checked><span class="slider"></span></label>
           </div>
-          <div class="field" id="targetAgeField" style="display:none;">
+          <div class="field" id="targetAgeField">
             <div class="lab">גיל פרישה יעד</div>
             <div class="control"><span class="aff">🎯</span><input id="retage" type="number" value="50" step="1" min="0"></div>
           </div>
@@ -472,9 +472,15 @@ tbody tr:hover{background:var(--surface-2);}
       </div>
 
       <div class="card">
+        <div class="card-h"><div class="ic">🎛️</div><h2>מטריצת רגישות — זמן ליעד (שנים)</h2>
+          <span class="sub">תשואת צבירה × הפקדה חודשית</span></div>
+        <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+      </div>
+
+      <div class="card">
         <div class="card-h"><div class="ic">✅</div><h2>הוכחת שימור הון ריאלי</h2>
           <span class="sub">3 שנות המשיכה הראשונות</span></div>
-        <div class="tbl-note"><b>שים לב:</b> הסכומים בטבלה נקובים ב<b>ערכים נומינליים</b> (החל ממועד הפרישה ואילך), כדי להראות כיצד הקרן גדלה נומינלית. המשיכה נטו בשנה הראשונה שקולה ל<b id="proofNet">—</b> בחודש בכוח קנייה של היום, ונשמרת כמעט קבועה לאורך השנים. עמודת "צמיחה ריאלית" = 0% היא ההוכחה לשימור הכוח.</div>
+        <div class="tbl-note"><b>שים לב:</b> הסכומים נקובים ב<b>ערכים נומינליים</b> (החל ממועד הפרישה ואילך), כדי להראות כיצד הקרן גדלה נומינלית. ה<b>משיכה נטו</b> נשמרת קבועה על <b id="proofNet">—</b> בחודש ב<b>כוח קנייה של היום</b> — הנומינלי עולה בדיוק בקצב האינפלציה, כך שכוח הקנייה זהה בכל שנה. עמודת "צמיחה ריאלית" ≈ 0% מוכיחה שהקרן נשמרת.</div>
         <div class="tbl-scroll">
           <table id="proofTbl">
             <thead><tr>
@@ -484,12 +490,6 @@ tbody tr:hover{background:var(--surface-2);}
             </tr></thead><tbody></tbody>
           </table>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-h"><div class="ic">🎛️</div><h2>מטריצת רגישות — זמן ליעד (שנים)</h2>
-          <span class="sub">תשואת צבירה × הפקדה חודשית</span></div>
-        <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
       </div>
 
       <div class="foot">
@@ -594,17 +594,22 @@ function coastFireCapital(target,ra,fee,age,retAge){
   const T=retAge-age; if(T<=0) return target;
   return target/Math.pow((1+ra)*(1-fee),T);
 }
-function buildProof(P,basis,rw,inf,tax,fee,years){
+// Proof model: hold the NET withdrawal constant in real (today's) terms.
+// The net each year inflates nominally at exactly `inf`, so its purchasing
+// power stays fixed at the user's goal. The capital's real value stays ~flat
+// (real growth ≈ 0%), with only a negligible tax-basis drift.
+function buildProof(P,basis,rw,inf,tax,fee,years,WrealAnnual,T){
   const rows=[]; let bal=P, B=basis;
   for(let y=1;y<=years;y++){
     const grossRet=bal*((1+rw)*(1-fee)-1);
     const Pafter=bal*(1+rw)*(1-fee);
-    const end=bal*(1+inf);
-    const G=Pafter-end;
-    const gr=Pafter>0?(Pafter-B)/Pafter:0;
-    const taxAmt=Math.max(0,G)*Math.max(0,Math.min(1,gr))*tax;
-    const net=G-taxAmt;
-    const realGrowth=bal>0?(end/bal-1-inf):0;
+    const gr=Pafter>0?Math.max(0,Math.min(1,(Pafter-B)/Pafter)):0;
+    const netTarget=WrealAnnual*Math.pow(1+inf, T+(y-1)); // constant real net, nominal this year
+    const G=netTarget/(1-gr*tax);                         // gross needed to net the target after tax
+    const taxAmt=G*gr*tax;
+    const net=G-taxAmt;                                   // == netTarget by construction
+    const end=Pafter-G;
+    const realGrowth=bal>0?(end/bal-1-inf):0;             // capital growth vs inflation (~0)
     B=B*(1-G/Pafter);
     rows.push({y,start:bal,grossRet,gross:G,tax:taxAmt,net,end,realGrowth});
     bal=end;
@@ -741,20 +746,22 @@ function render(){
 
   /* proof */
   $('proofNet').textContent = shekelShort(netReqMonthlyReal);
-  const proof=buildProof(targetNom, basisNom, P.rw, P.inf, P.tax, P.fee, 3);
+  const proof=buildProof(targetNom, basisNom, P.rw, P.inf, P.tax, P.fee, 3, WannualNet, T);
   $('proofTbl').querySelector('tbody').innerHTML = proof.map(r=>{
     // each withdrawal year occurs T+(y-1) years from today -> its own deflator to today's PP
     const rowDfac=Math.pow(1+P.inf, T + (r.y-1));
-    const netRealRow=r.net/rowDfac;
+    const netRealRow=r.net/rowDfac;                 // constant by construction (= WannualNet)
+    const rg=r.realGrowth*100;
+    const rgTxt=(Math.abs(rg)<0.05?'0.0':rg.toFixed(1))+'%';   // negligible drift -> 0.0%
     return `<tr>
     <td data-label="שנה" class="cell-year">שנה ${r.y}</td>
     <td class="tbl-num" data-label="יתרת פתיחה">${shekel(r.start)}</td>
     <td class="tbl-num pos" data-label="תשואה ברוטו">${shekel(r.grossRet)}</td>
     <td class="tbl-num" data-label="משיכה גולמית">${shekel(r.gross)}</td>
     <td class="tbl-num neg" data-label="מס רווח הון">${shekel(-r.tax)}</td>
-    <td class="tbl-num pos" data-label="משיכה נטו ביד">${shekel(r.net)}<span class="sub-nom">≈ ${shekel(netRealRow)} בערכי היום</span></td>
+    <td class="tbl-num pos" data-label="משיכה נטו ביד">${shekel(r.net)}<span class="sub-nom">= ${shekel(netRealRow)} בכוח קנייה של היום</span></td>
     <td class="tbl-num" data-label="יתרת סגירה">${shekel(r.end)}</td>
-    <td data-label="צמיחה ריאלית"><span class="pill zero">${(r.realGrowth*100).toFixed(2)}%</span></td>
+    <td data-label="צמיחה ריאלית"><span class="pill zero">${rgTxt}</span></td>
   </tr>`;}).join('');
 
   buildMatrix(P);
@@ -793,7 +800,7 @@ $('accMode').addEventListener('click', e=>{
 const DEFAULTS={p0:100000,c:5000,w:15000,passive:0,ra:7,rw:7,inf:2.5,tax:25,fee:0.5,age:30,cgrow:0,lump:0,lumpage:40,retage:50};
 $('resetBtn').addEventListener('click', ()=>{
   Object.entries(DEFAULTS).forEach(([k,v])=> $(k).value=v);
-  $('useTargetAge').checked=false; $('targetAgeField').style.display='none';
+  $('useTargetAge').checked=true; $('targetAgeField').style.display='';
   accReal=true; [...$('accMode').children].forEach(x=>x.classList.toggle('active', x.dataset.m==='real'));
   render();
 });
