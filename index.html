@@ -1,392 +1,833 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מחשבון חופש כלכלי (FIRE) מתקדם</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>מחשבון חופש כלכלי (FIRE) — מהדורה מקצועית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --acc:#22d3ee; --acc2:#34d399;
-    --txt:#e2e8f0; --muted:#94a3b8; --line:#334155; --warn:#fbbf24; --danger:#f87171;
-    --grad:linear-gradient(135deg,#22d3ee 0%,#34d399 100%);
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#134e5e33,transparent),var(--bg);
-    color:var(--txt);font-family:"Segoe UI",Arial,Heebo,sans-serif;line-height:1.5}
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
-  header h1{font-size:30px;margin:0 0 4px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
-  header p{color:var(--muted);margin:0 0 22px;font-size:15px}
-  .grid{display:grid;grid-template-columns:380px 1fr;gap:22px}
-  @media(max-width:920px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 8px 30px #0006}
-  .card h2{margin:0 0 16px;font-size:17px;display:flex;align-items:center;gap:8px}
-  .card h2::before{content:"";width:6px;height:20px;background:var(--grad);border-radius:4px;display:inline-block}
-  .field{margin-bottom:14px}
-  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
-  .field .hint{font-size:11px;color:#64748b}
-  .field input,.field select{width:100%;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:10px;color:var(--txt);font-size:14px;outline:none;transition:.15s}
-  .field input:focus,.field select:focus{border-color:var(--acc);box-shadow:0 0 0 3px #22d3ee22}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-  .toggle{display:flex;align-items:center;gap:10px;background:var(--panel2);padding:10px 12px;border-radius:10px;border:1px solid var(--line);margin-bottom:14px}
-  .toggle input{width:auto}
-  .adv{border-top:1px dashed var(--line);margin-top:8px;padding-top:12px}
-  .adv summary{cursor:pointer;color:var(--acc);font-size:13px;font-weight:600;margin-bottom:10px}
-  button.calc{width:100%;padding:14px;border:0;border-radius:12px;background:var(--grad);color:#062;font-weight:800;
-    font-size:16px;cursor:pointer;margin-top:8px;transition:.15s}
-  button.calc:hover{filter:brightness(1.08);transform:translateY(-1px)}
-  /* results */
-  .headline{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
-  @media(max-width:560px){.headline{grid-template-columns:1fr}}
-  .kpi{background:linear-gradient(135deg,#1e293b,#0f2836);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative;overflow:hidden}
-  .kpi .lbl{font-size:12px;color:var(--muted);margin-bottom:6px}
-  .kpi .val{font-size:26px;font-weight:800;color:#fff}
-  .kpi .sub{font-size:12px;color:var(--acc2);margin-top:4px}
-  .kpi.big .val{font-size:30px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
-  th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line)}
-  th{color:var(--muted);font-weight:600;font-size:12px}
-  tr:hover td{background:#ffffff08}
-  .pos{color:var(--acc2)} .neg{color:var(--danger)} .mut{color:var(--muted)}
-  canvas{width:100%;height:230px;margin-top:8px}
-  .sec{margin-top:22px}
-  .sec h3{font-size:15px;margin:0 0 6px;color:#fff}
-  .sec .desc{font-size:12px;color:var(--muted);margin:0 0 6px}
-  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#22d3ee22;color:var(--acc);margin-inline-start:6px}
-  .placeholder{color:var(--muted);text-align:center;padding:60px 20px}
-  .err{background:#f8717122;border:1px solid var(--danger);color:#fecaca;padding:12px;border-radius:10px;font-size:13px}
-  .note{font-size:11px;color:#64748b;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+:root{
+  --bg:#f4f6fb; --bg-grad1:#eef2fb; --bg-grad2:#f7f9fd;
+  --surface:#ffffff; --surface-2:#fbfcfe; --surface-3:#f1f4fa;
+  --line:#e5e9f2; --line-2:#eef1f7;
+  --ink:#0f1b33; --ink-2:#37456a; --muted:#6b7896; --muted-2:#9aa6c0;
+  --brand:#2563eb; --brand-2:#3b82f6; --brand-soft:#e8f0ff;
+  --cyan:#0891b2; --cyan-soft:#e0f5fb;
+  --violet:#7c3aed; --violet-soft:#f0e9ff;
+  --green:#059669; --green-soft:#e5f6ef; --green-ink:#047857;
+  --amber:#d97706; --amber-soft:#fef3e2;
+  --rose:#e11d48; --rose-soft:#fdeaef;
+  --shadow-sm:0 1px 2px rgba(16,27,51,.06), 0 1px 3px rgba(16,27,51,.04);
+  --shadow:0 4px 14px rgba(16,27,51,.06), 0 2px 6px rgba(16,27,51,.04);
+  --shadow-lg:0 18px 40px rgba(16,27,51,.10), 0 6px 14px rgba(16,27,51,.05);
+  --r-sm:10px; --r:14px; --r-lg:20px; --r-xl:26px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Heebo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--ink); line-height:1.6; min-height:100vh; font-size:15px;
+  background:
+    radial-gradient(1100px 520px at 100% -8%, #e4ecff 0%, transparent 60%),
+    radial-gradient(900px 480px at -6% 6%, #e7fbff 0%, transparent 55%),
+    linear-gradient(180deg,var(--bg-grad1),var(--bg-grad2));
+  background-attachment:fixed;
+}
+.num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; direction:ltr; unicode-bidi:isolate;}
+.wrap{max-width:1340px; margin:0 auto; padding:26px 22px 70px;}
+
+/* ---------- header ---------- */
+.masthead{
+  display:flex; align-items:center; gap:18px; padding:22px 26px; margin-bottom:22px;
+  background:linear-gradient(120deg,#1e3a8a 0%, #2563eb 55%, #0891b2 120%);
+  border-radius:var(--r-xl); color:#fff; box-shadow:var(--shadow-lg); position:relative; overflow:hidden;
+}
+.masthead::after{content:"";position:absolute;inset-block-start:-40%;inset-inline-start:-10%;width:420px;height:420px;
+  background:radial-gradient(circle,rgba(255,255,255,.16),transparent 62%);pointer-events:none;}
+.mh-logo{width:56px;height:56px;border-radius:18px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  font-size:28px;background:rgba(255,255,255,.16);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.25);}
+.mh-title h1{margin:0;font-size:1.6rem;font-weight:800;letter-spacing:-.4px;}
+.mh-title p{margin:3px 0 0;font-size:.95rem;color:#dbe7ff;font-weight:400;}
+.mh-badge{margin-inline-start:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.mh-badge .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;
+  padding:5px 12px;border-radius:999px;font-size:.78rem;font-weight:600;white-space:nowrap;}
+@media(max-width:720px){.mh-badge{display:none;} .mh-title h1{font-size:1.3rem;}}
+
+/* ---------- summary hero ---------- */
+.hero{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  padding:20px 24px; box-shadow:var(--shadow); margin-bottom:22px;
+  display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+}
+.hero .verdict{font-size:1.05rem; font-weight:600; color:var(--ink-2); flex:1 1 340px; line-height:1.7;}
+.hero .verdict b{color:var(--brand); font-weight:800;}
+.hero .verdict .ok{color:var(--green-ink);} .hero .verdict .warn{color:var(--amber);}
+.hero-mini{display:flex; gap:14px; flex-wrap:wrap;}
+.hero-mini .m{background:var(--surface-3); border:1px solid var(--line-2); border-radius:var(--r);
+  padding:10px 16px; min-width:120px;}
+.hero-mini .m .l{font-size:.72rem; color:var(--muted); font-weight:600;}
+.hero-mini .m .v{font-size:1.15rem; font-weight:800; color:var(--ink);}
+
+/* ---------- layout ---------- */
+.layout{display:grid; grid-template-columns:390px 1fr; gap:22px; align-items:start;}
+@media(max-width:1024px){.layout{grid-template-columns:1fr;}}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow); padding:22px;}
+.card + .card{margin-top:22px;}
+.card-h{display:flex; align-items:center; gap:10px; margin:0 0 18px;}
+.card-h .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:17px;background:var(--brand-soft);color:var(--brand);flex:0 0 auto;}
+.card-h h2{margin:0;font-size:1.08rem;font-weight:700;letter-spacing:-.2px;}
+.card-h .sub{font-size:.8rem;color:var(--muted);font-weight:400;margin-inline-start:auto;}
+
+/* sidebar sticky */
+.sidebar{position:sticky; top:16px;}
+@media(max-width:1024px){.sidebar{position:static;}}
+
+/* input groups */
+.group-title{display:flex;align-items:center;gap:8px;margin:4px 0 12px;font-size:.82rem;font-weight:700;
+  color:var(--brand);text-transform:none;letter-spacing:.2px;}
+.group-title .line{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+.group + .group{margin-top:20px;padding-top:6px;}
+.field{margin-bottom:13px;}
+.field .lab{display:flex;align-items:center;gap:6px;font-size:.83rem;color:var(--ink-2);margin-bottom:6px;font-weight:600;}
+.info{width:16px;height:16px;border-radius:50%;background:var(--surface-3);color:var(--muted);
+  font-size:.68rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;cursor:help;
+  border:1px solid var(--line);flex:0 0 auto;}
+.info:hover{background:var(--brand-soft);color:var(--brand);border-color:var(--brand-2);}
+.control{position:relative;display:flex;align-items:center;}
+.control .aff{position:absolute;inset-inline-start:12px;color:var(--muted-2);font-size:.9rem;font-weight:600;pointer-events:none;}
+.control input{width:100%;background:var(--surface-2);border:1.5px solid var(--line);color:var(--ink);
+  border-radius:var(--r-sm);padding:11px 13px 11px 32px;font-size:1rem;font-weight:600;outline:none;font-family:inherit;
+  transition:border-color .15s, box-shadow .15s, background .15s; -moz-appearance:textfield;}
+.control input::-webkit-outer-spin-button,.control input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.control input:focus{border-color:var(--brand-2);background:#fff;box-shadow:0 0 0 3.5px rgba(59,130,246,.14);}
+.control input:disabled{opacity:.5;cursor:not-allowed;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;
+  background:var(--surface-3);border:1px solid var(--line-2);border-radius:var(--r-sm);margin-bottom:12px;}
+.toggle-row .t-lab{font-size:.83rem;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:6px;}
+.switch{position:relative;width:42px;height:23px;flex:0 0 auto;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;inset:0;background:#cbd5e8;border-radius:999px;transition:.2s;cursor:pointer;}
+.slider::before{content:"";position:absolute;height:17px;width:17px;inset-block-start:3px;inset-inline-end:3px;
+  background:#fff;border-radius:50%;transition:.2s;box-shadow:var(--shadow-sm);}
+.switch input:checked + .slider{background:var(--brand);}
+.switch input:checked + .slider::before{transform:translateX(-19px);}
+.hint{font-size:.72rem;color:var(--muted-2);margin-top:4px;}
+.reset-btn{width:100%;margin-top:16px;padding:11px;border:1.5px solid var(--line);background:var(--surface-3);
+  color:var(--ink-2);border-radius:var(--r-sm);font-size:.86rem;font-weight:600;cursor:pointer;font-family:inherit;
+  transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.reset-btn:hover{background:var(--rose-soft);color:var(--rose);border-color:var(--rose);}
+
+/* banner */
+.banner{border-radius:var(--r);padding:14px 16px;font-size:.9rem;margin-bottom:20px;display:none;
+  align-items:flex-start;gap:10px;font-weight:500;line-height:1.6;}
+.banner.show{display:flex;}
+.banner.warn{background:var(--amber-soft);border:1px solid #f3c98a;color:#92590a;}
+.banner.err{background:var(--rose-soft);border:1px solid #f4b0c0;color:#a01235;}
+.banner .b-ic{font-size:1.1rem;flex:0 0 auto;}
+
+/* KPI grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:680px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:420px){.kpi-grid{grid-template-columns:1fr;}}
+.kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;
+  position:relative;overflow:hidden;transition:transform .15s, box-shadow .15s;}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.kpi::before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;background:var(--accent,var(--brand));}
+.kpi .k-top{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+.kpi .k-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;
+  background:var(--accent-soft,var(--brand-soft));color:var(--accent,var(--brand));flex:0 0 auto;}
+.kpi .k-lbl{font-size:.75rem;color:var(--muted);font-weight:600;line-height:1.35;}
+.kpi .k-val{font-size:1.42rem;font-weight:800;letter-spacing:-.5px;color:var(--ink);line-height:1.15;}
+.kpi .k-val.sm{font-size:1.15rem;}
+.kpi .k-sub{font-size:.72rem;color:var(--muted-2);margin-top:3px;font-weight:500;}
+.kpi.a-brand{--accent:var(--brand);--accent-soft:var(--brand-soft);}
+.kpi.a-green{--accent:var(--green);--accent-soft:var(--green-soft);}
+.kpi.a-violet{--accent:var(--violet);--accent-soft:var(--violet-soft);}
+.kpi.a-cyan{--accent:var(--cyan);--accent-soft:var(--cyan-soft);}
+.kpi.a-amber{--accent:var(--amber);--accent-soft:var(--amber-soft);}
+.kpi.a-rose{--accent:var(--rose);--accent-soft:var(--rose-soft);}
+
+/* chart */
+.chart-box{position:relative;height:340px;}
+.chart-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:.82rem;color:var(--ink-2);font-weight:500;}
+.chart-legend span{display:inline-flex;align-items:center;gap:7px;}
+.chart-legend .sw{width:14px;height:14px;border-radius:4px;display:inline-block;}
+.chart-legend .sw.line{height:0;border-top:2.5px dashed var(--amber);width:16px;border-radius:0;}
+
+/* tables */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r);border:1px solid var(--line);}
+table{width:100%;border-collapse:collapse;font-size:.86rem;}
+thead th{background:var(--surface-3);color:var(--ink-2);font-weight:700;font-size:.78rem;padding:11px 12px;
+  text-align:start;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line-2);color:var(--ink);white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+.tbl-num{text-align:end;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;}
+.pos{color:var(--green-ink);font-weight:600;} .neg{color:var(--rose);font-weight:600;}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:700;}
+.pill.zero{background:var(--green-soft);color:var(--green-ink);}
+.row-base{background:var(--brand-soft) !important;}
+.row-base td{font-weight:700;}
+
+/* sensitivity grid */
+.sens-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:820px){.sens-grid{grid-template-columns:1fr;}}
+.sens-title{font-size:.86rem;font-weight:700;color:var(--ink-2);margin:0 0 10px;display:flex;align-items:center;gap:7px;}
+.sens-title .d{width:8px;height:8px;border-radius:50%;background:var(--brand);}
+
+/* heatmap matrix */
+.matrix-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--line);}
+.matrix{border-collapse:collapse;width:100%;font-size:.8rem;}
+.matrix th,.matrix td{padding:9px 8px;text-align:center;border:1px solid var(--line-2);white-space:nowrap;}
+.matrix thead th{background:var(--surface-3);font-weight:700;}
+.matrix .corner{background:var(--ink);color:#fff;font-size:.72rem;}
+.matrix .rowhead{background:var(--surface-3);font-weight:700;}
+.matrix .cell{font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
+
+/* footer */
+.foot{color:var(--muted-2);font-size:.78rem;margin-top:28px;text-align:center;line-height:1.8;
+  padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);}
+.tip{font-size:.78rem;color:var(--muted);background:var(--surface-3);border:1px solid var(--line-2);
+  border-radius:var(--r-sm);padding:11px 14px;margin-top:14px;line-height:1.6;}
+.tip b{color:var(--brand);}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>מחשבון חופש כלכלי (FIRE) מתקדם 🔥</h1>
-    <p>חישוב מבוסס מתמטיקה פיננסית — ריבית-דריבית חודשית, שחיקת מס לפי פיצול קרן/רווח, וניכוי דמי ניהול.</p>
-  </header>
 
-  <div class="grid">
-    <!-- ==================== INPUTS ==================== -->
-    <div class="card">
-      <h2>פרמטרים</h2>
-
-      <div class="toggle">
-        <input type="checkbox" id="isReal" checked>
-        <label for="isReal" style="margin:0;color:var(--txt);font-size:13px">התשואות שהוזנו הן <b>ריאליות</b> (מנוכות אינפלציה)</label>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>מטבע</label>
-          <select id="cur"><option value="₪">₪ ש"ח</option><option value="$">$ דולר</option></select>
-        </div>
-        <div class="field">
-          <label>גיל נוכחי</label>
-          <input type="number" id="age" value="30">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>1. הון התחלתי קיים</label>
-        <input type="number" id="P0" value="100000">
-      </div>
-      <div class="field">
-        <label>2. הפקדה חודשית שוטפת</label>
-        <input type="number" id="C" value="5000">
-      </div>
-      <div class="field">
-        <label>3. סכום משיכה חודשי נקי מבוקש (נטו ביד)</label>
-        <input type="number" id="Wnet" value="12000">
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>4. תשואה שנתית — צבירה</label>
-          <input type="number" step="0.1" id="rAcc" value="7"><span class="hint">% (ברירת מחדל 7%)</span>
-        </div>
-        <div class="field">
-          <label>5. תשואה שנתית — משיכה</label>
-          <input type="number" step="0.1" id="rWd" value="5"><span class="hint">% (ברירת מחדל 5%)</span>
-        </div>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>6. אינפלציה שנתית</label>
-          <input type="number" step="0.1" id="infl" value="2.5"><span class="hint">% (רלוונטי במצב נומינלי)</span>
-        </div>
-        <div class="field">
-          <label>7. מס רווח הון</label>
-          <input type="number" step="0.1" id="tax" value="25"><span class="hint">% (ברירת מחדל 25%)</span>
-        </div>
-      </div>
-
-      <div class="row2">
-        <div class="field">
-          <label>8. שיעור משיכה בטוח (SWR)</label>
-          <input type="number" step="0.1" id="swr" value="4"><span class="hint">% (ברירת מחדל 4%)</span>
-        </div>
-        <div class="field">
-          <label>9. דמי ניהול שנתיים</label>
-          <input type="number" step="0.01" id="fee" value="0.5"><span class="hint">% (ברירת מחדל 0.5%)</span>
-        </div>
-      </div>
-
-      <details class="adv">
-        <summary>10. שינויים צפויים בעתיד (אופציונלי)</summary>
-        <div class="field">
-          <label>סכום חד-פעמי #1 (קרן השתלמות / ירושה)</label>
-          <div class="row2">
-            <input type="number" id="one1amt" placeholder="סכום" value="">
-            <input type="number" id="one1yr" placeholder="בשנה מס'" value="">
-          </div>
-        </div>
-        <div class="field">
-          <label>סכום חד-פעמי #2</label>
-          <div class="row2">
-            <input type="number" id="one2amt" placeholder="סכום" value="">
-            <input type="number" id="one2yr" placeholder="בשנה מס'" value="">
-          </div>
-        </div>
-        <div class="field">
-          <label>שינוי בהפקדה החודשית</label>
-          <div class="row2">
-            <input type="number" id="cChgAmt" placeholder="הפקדה חדשה" value="">
-            <input type="number" id="cChgYr" placeholder="החל משנה" value="">
-          </div>
-        </div>
-      </details>
-
-      <button class="calc" onclick="run()">חשב את תאריך החופש הכלכלי ←</button>
-      <div class="note">כל התוצאות מוצגות בערכים ריאליים (כוח קנייה של היום). המשיכה החודשית נשמרת קבועה במונחים ריאליים לאורך זמן. מחשבון זה אינו מהווה ייעוץ פיננסי.</div>
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="mh-logo">🔥</div>
+    <div class="mh-title">
+      <h1>מחשבון חופש כלכלי (FIRE)</h1>
+      <p>מודל שימור הון ריאלי מלא · צמיחה ריאלית 0% בשלב המשיכות · מהדורה מקצועית מקיפה</p>
     </div>
-
-    <!-- ==================== RESULTS ==================== -->
-    <div class="card" id="results">
-      <h2>תוצאות</h2>
-      <div class="placeholder">הזן את הפרמטרים ולחץ על "חשב" כדי לראות את השורה התחתונה, יעד הקרן, אבני הדרך וניתוח הרגישות.</div>
+    <div class="mh-badge">
+      <span class="chip">💡 חישוב דינמי בזמן אמת</span>
+      <span class="chip">📊 12 מדדי ליבה · ניתוחי רגישות</span>
     </div>
+  </div>
+
+  <!-- VERDICT HERO -->
+  <div class="hero">
+    <div class="verdict" id="verdict">מזין נתונים…</div>
+    <div class="hero-mini" id="heroMini"></div>
+  </div>
+
+  <div id="banner" class="banner"></div>
+
+  <div class="layout">
+
+    <!-- ============ SIDEBAR / INPUTS ============ -->
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-h">
+          <div class="ic">⚙️</div>
+          <h2>נתוני קלט</h2>
+        </div>
+
+        <!-- required -->
+        <div class="group">
+          <div class="group-title">נתוני חובה <span class="line"></span></div>
+
+          <div class="field">
+            <div class="lab">הון התחלתי קיים
+              <span class="info" title="הסכום הנזיל שכבר צברת ומיועד להשקעה לטובת החופש הכלכלי.">?</span>
+            </div>
+            <div class="control"><span class="aff">₪</span>
+              <input id="p0" type="number" value="100000" step="1000" min="0"></div>
+          </div>
+
+          <div class="field">
+            <div class="lab">הפקדה חודשית שוטפת
+              <span class="info" title="הסכום שאתה מפקיד להשקעה מדי חודש בשלב הצבירה.">?</span>
+            </div>
+            <div class="control"><span class="aff">₪</span>
+              <input id="c" type="number" value="5000" step="250" min="0"></div>
+          </div>
+
+          <div class="field">
+            <div class="lab">משיכה חודשית נטו מבוקשת
+              <span class="info" title="ההוצאה החודשית נטו שתרצה למשוך בשלב הפרישה, במונחי כוח קנייה של היום. הסכום יוצמד אוטומטית לאינפלציה עד למועד הפרישה.">?</span>
+            </div>
+            <div class="control"><span class="aff">₪</span>
+              <input id="w" type="number" value="15000" step="500" min="0"></div>
+            <div class="hint">בכוח קנייה של היום — מוצמד לאינפלציה עד לפרישה</div>
+          </div>
+
+          <div class="two">
+            <div class="field">
+              <div class="lab">תשואה בצבירה
+                <span class="info" title="התשואה השנתית הברוטו (נומינלית) הצפויה בשלב צבירת ההון, לפני דמי ניהול.">?</span>
+              </div>
+              <div class="control"><span class="aff">%</span>
+                <input id="ra" type="number" value="7" step="0.1"></div>
+            </div>
+            <div class="field">
+              <div class="lab">תשואה במשיכה
+                <span class="info" title="התשואה השנתית הברוטו הצפויה בשלב המשיכות. בדרך כלל שמרנית יותר מהצבירה בשל תמהיל נכסים דפנסיבי.">?</span>
+              </div>
+              <div class="control"><span class="aff">%</span>
+                <input id="rw" type="number" value="5" step="0.1"></div>
+            </div>
+          </div>
+
+          <div class="two">
+            <div class="field">
+              <div class="lab">אינפלציה שנתית
+                <span class="info" title="שיעור עליית המחירים השנתי הצפוי. משמש לשחיקת כוח הקנייה ולהצמדת הקרן בשלב המשיכה.">?</span>
+              </div>
+              <div class="control"><span class="aff">%</span>
+                <input id="inf" type="number" value="2.5" step="0.1"></div>
+            </div>
+            <div class="field">
+              <div class="lab">מס רווח הון
+                <span class="info" title="שיעור המס על רווחי ההון בעת המשיכה. בישראל 25% ריאלי הוא ברירת המחדל הנפוצה.">?</span>
+              </div>
+              <div class="control"><span class="aff">%</span>
+                <input id="tax" type="number" value="25" step="0.5"></div>
+            </div>
+          </div>
+
+          <div class="two">
+            <div class="field">
+              <div class="lab">דמי ניהול שנתיים
+                <span class="info" title="דמי הניהול השנתיים הכוללים על התיק (למשל קרן/פוליסה). מנוכים מהתשואה בשני השלבים.">?</span>
+              </div>
+              <div class="control"><span class="aff">%</span>
+                <input id="fee" type="number" value="0.5" step="0.05"></div>
+            </div>
+            <div class="field">
+              <div class="lab">גיל נוכחי
+                <span class="info" title="גילך היום. משמש לחישוב הגיל הצפוי בפרישה ולניתוחי Coast FIRE.">?</span>
+              </div>
+              <div class="control"><span class="aff">🎂</span>
+                <input id="age" type="number" value="30" step="1" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- optional -->
+        <div class="group">
+          <div class="group-title">פרמטרים מתקדמים (אופציונלי) <span class="line"></span></div>
+
+          <div class="field">
+            <div class="lab">גידול הפקדה שנתי
+              <span class="info" title="שיעור הגדלת ההפקדה החודשית מדי שנה (למשל בעקבות עליית שכר). 0 = הפקדה קבועה.">?</span>
+            </div>
+            <div class="control"><span class="aff">%</span>
+              <input id="cgrow" type="number" value="2" step="0.5" min="0"></div>
+          </div>
+
+          <div class="field">
+            <div class="lab">הכנסה פסיבית חודשית בפרישה
+              <span class="info" title="הכנסה קבועה צפויה בפרישה (פנסיה, ביטוח לאומי, שכר דירה). מקטינה את סכום המשיכה הנדרש מהתיק. במונחי היום.">?</span>
+            </div>
+            <div class="control"><span class="aff">₪</span>
+              <input id="passive" type="number" value="0" step="250" min="0"></div>
+          </div>
+
+          <div class="two">
+            <div class="field">
+              <div class="lab">הפקדה חד-פעמית
+                <span class="info" title="סכום חד-פעמי צפוי (בונוס, ירושה, מימוש). יתווסף לתיק בגיל שתבחר. 0 = ללא.">?</span>
+              </div>
+              <div class="control"><span class="aff">₪</span>
+                <input id="lump" type="number" value="0" step="10000" min="0"></div>
+            </div>
+            <div class="field">
+              <div class="lab">בגיל
+                <span class="info" title="הגיל שבו צפויה ההפקדה החד-פעמית להתקבל.">?</span>
+              </div>
+              <div class="control"><span class="aff">🎂</span>
+                <input id="lumpage" type="number" value="40" step="1" min="0"></div>
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <div class="t-lab">🎯 חישוב הפקדה לגיל פרישה יעד
+              <span class="info" title="הפעל כדי לגלות כמה עליך להפקיד בחודש כדי לפרוש בגיל מסוים.">?</span>
+            </div>
+            <label class="switch"><input type="checkbox" id="useTargetAge"><span class="slider"></span></label>
+          </div>
+          <div class="field" id="targetAgeField" style="display:none;">
+            <div class="lab">גיל פרישה יעד</div>
+            <div class="control"><span class="aff">🎯</span>
+              <input id="retage" type="number" value="50" step="1" min="0"></div>
+          </div>
+        </div>
+
+        <button class="reset-btn" id="resetBtn">↺ איפוס לערכי ברירת מחדל</button>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN / OUTPUTS ============ -->
+    <main>
+
+      <!-- KPI grid -->
+      <div class="card">
+        <div class="card-h">
+          <div class="ic">📌</div>
+          <h2>מדדי ליבה</h2>
+          <span class="sub">כל הסכומים בשקלים · חישוב בזמן אמת</span>
+        </div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+      </div>
+
+      <!-- Accumulation chart -->
+      <div class="card">
+        <div class="card-h">
+          <div class="ic">📈</div>
+          <h2>צמיחת התיק בשלב הצבירה</h2>
+          <span class="sub">פילוח קרן מול רווחים</span>
+        </div>
+        <div class="chart-box"><canvas id="chartAcc"></canvas></div>
+        <div class="chart-legend">
+          <span><i class="sw" style="background:#2563eb"></i> קרן (הפקדות + הון התחלתי)</span>
+          <span><i class="sw" style="background:#0891b2"></i> רווחים מצטברים</span>
+          <span><i class="sw line"></i> יעד הקרן הנדרש</span>
+        </div>
+      </div>
+
+      <!-- Withdrawal preservation chart -->
+      <div class="card">
+        <div class="card-h">
+          <div class="ic">🛡️</div>
+          <h2>שלב המשיכה — שימור הון ריאלי</h2>
+          <span class="sub">15 שנים ראשונות</span>
+        </div>
+        <div class="chart-box" style="height:300px"><canvas id="chartWd"></canvas></div>
+        <div class="chart-legend">
+          <span><i class="sw" style="background:#2563eb"></i> יתרת התיק (נומינלי — גדלה בקצב האינפלציה)</span>
+          <span><i class="sw" style="background:#059669"></i> ערך ריאלי (כוח קנייה קבוע)</span>
+        </div>
+        <div class="tip"><b>המשמעות:</b> הקו הכחול עולה נומינלית אך הקו הירוק (הערך הריאלי) נשאר שטוח לחלוטין — הוכחה חזותית לכך שהקרן נשמרת בכוח קנייה קבוע (צמיחה ריאלית 0%).</div>
+      </div>
+
+      <!-- Preservation proof table -->
+      <div class="card">
+        <div class="card-h">
+          <div class="ic">✅</div>
+          <h2>הוכחת שימור הון ריאלי</h2>
+          <span class="sub">3 שנות המשיכה הראשונות</span>
+        </div>
+        <div class="tbl-scroll">
+          <table id="proofTbl">
+            <thead><tr>
+              <th>שנה</th>
+              <th class="tbl-num">יתרת פתיחה</th>
+              <th class="tbl-num">תשואה ברוטו</th>
+              <th class="tbl-num">משיכה גולמית</th>
+              <th class="tbl-num">מס רווח הון</th>
+              <th class="tbl-num">משיכה נטו ביד</th>
+              <th class="tbl-num">יתרת סגירה</th>
+              <th>צמיחה ריאלית</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sensitivity -->
+      <div class="card">
+        <div class="card-h">
+          <div class="ic">🎛️</div>
+          <h2>ניתוחי רגישות</h2>
+          <span class="sub">השפעת שינוי בהנחות על הזמן ליעד והקרן הנדרשת</span>
+        </div>
+        <div class="sens-grid">
+          <div>
+            <div class="sens-title"><span class="d"></span>רגישות לתשואה בשלב המשיכה</div>
+            <div class="tbl-scroll"><table id="sensRw"><thead><tr>
+              <th>תרחיש</th><th class="tbl-num">תשואה</th><th class="tbl-num">קרן נדרשת</th><th class="tbl-num">זמן ליעד</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div>
+            <div class="sens-title"><span class="d"></span>רגישות לתשואה בשלב הצבירה</div>
+            <div class="tbl-scroll"><table id="sensRa"><thead><tr>
+              <th>תרחיש</th><th class="tbl-num">תשואה</th><th class="tbl-num">זמן ליעד</th><th class="tbl-num">גיל בפרישה</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div>
+            <div class="sens-title"><span class="d"></span>רגישות לאינפלציה</div>
+            <div class="tbl-scroll"><table id="sensInf"><thead><tr>
+              <th>תרחיש</th><th class="tbl-num">אינפלציה</th><th class="tbl-num">קרן נדרשת</th><th class="tbl-num">זמן ליעד</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div>
+            <div class="sens-title"><span class="d"></span>רגישות להפקדה החודשית</div>
+            <div class="tbl-scroll"><table id="sensC"><thead><tr>
+              <th>תרחיש</th><th class="tbl-num">הפקדה</th><th class="tbl-num">זמן ליעד</th><th class="tbl-num">גיל בפרישה</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+
+        <div style="margin-top:22px">
+          <div class="sens-title"><span class="d"></span>מטריצת רגישות דו-ממדית — זמן ליעד (שנים)</div>
+          <div class="hint" style="margin-bottom:10px">שורות: תשואת צבירה · עמודות: הפקדה חודשית · צבע כהה = זמן ארוך יותר</div>
+          <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+        </div>
+      </div>
+
+      <div class="foot">
+        כלי זה מספק אומדן חינוכי בלבד ואינו מהווה ייעוץ פיננסי, מס או השקעות. החישובים דטרמיניסטיים ואינם מביאים בחשבון תנודתיות, רצף תשואות (sequence-of-returns) או שינויי חקיקה.<br>
+        המשיכה מוזנת בכוח קנייה של היום ומוצמדת לאינפלציה עד הפרישה · כל התשואות נומינליות (ברוטו) לפני דמי ניהול · מודל שימור הון ריאלי מלא — הקרן לעולם אינה נשחקת.
+      </div>
+
+    </main>
   </div>
 </div>
 
 <script>
-/* ---------- helpers ---------- */
-const num = id => parseFloat(document.getElementById(id).value)||0;
-const fmt = n => Math.round(n).toLocaleString('en-US');
-const fmtM = n => { // compact
-  const a=Math.abs(n);
-  if(a>=1e6) return (n/1e6).toFixed(1)+'M';
-  if(a>=1e3) return Math.round(n/1e3)+'K';
-  return Math.round(n).toString();
-};
-let CUR='₪';
+"use strict";
+/* ===================== helpers ===================== */
+const $ = id => document.getElementById(id);
+const val = id => parseFloat($(id).value) || 0;
+const pct = id => (parseFloat($(id).value) || 0) / 100;
+const CAP = 1200; // 100-year safety cap
 
-/* monthly REAL net rate: inflation cancels in real mode; fee is a haircut */
-function monthlyRealNet(annual, fee, infl, isReal){
-  const r=annual/100, f=fee/100, i=infl/100;
-  let realNet;
-  if(isReal){ realNet = (1+r)*(1-f) - 1; }
-  else { realNet = (1+r)*(1-f)/(1+i) - 1; }
-  return Math.pow(1+realNet, 1/12) - 1;
+const nf = new Intl.NumberFormat('he-IL', {maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('he-IL', {maximumFractionDigits:1});
+function shekel(v){ const s = nf.format(Math.abs(Math.round(v))); return (v<0?'(':'')+'₪'+s+(v<0?')':''); }
+function shekelShort(v){
+  const a = Math.abs(v);
+  if (a >= 1e6) return (v<0?'-':'')+'₪'+nf1.format(a/1e6)+' מיליון';
+  if (a >= 1e4) return (v<0?'-':'')+'₪'+nf.format(Math.round(a/1e3))+' אלף';
+  return shekel(v);
+}
+function pctS(v,d=1){ return nf1.format(v*100).replace(/,/g,'.') === '' ? '' : (v*100).toFixed(d)+'%'; }
+function yearsMonths(months){
+  const y=Math.floor(months/12), m=Math.round(months%12);
+  if (months<=0) return 'מיידי';
+  if (y===0) return m+' חודשים';
+  if (m===0) return y+' שנים';
+  return y+' שנים ו-'+m+' חודשים';
 }
 
-/* accumulation simulation until target reached (all real terms) */
-function simulate(P0,C,mRate,target,cfg){
-  let P=P0, basis=P0, month=0, contrib=C;
-  const series=[{m:0,P:P0}];
-  const maxM=1200;
-  while(P<target && month<maxM){
-    month++;
-    // contribution change
-    if(cfg.cChgYr>0 && month===Math.round(cfg.cChgYr*12)) contrib=cfg.cChgAmt;
-    // growth
-    P = P*(1+mRate);
-    // one-offs
-    if(cfg.one1yr>0 && month===Math.round(cfg.one1yr*12)){P+=cfg.one1amt; basis+=cfg.one1amt;}
-    if(cfg.one2yr>0 && month===Math.round(cfg.one2yr*12)){P+=cfg.one2amt; basis+=cfg.one2amt;}
-    // contribution
-    P+=contrib; basis+=contrib;
-    series.push({m:month,P:P});
+/* ===================== core financial engine ===================== */
+function accumulate(P0, C0, cGrow, Ptarget, ra, fee, lumpSum, lumpMonth, record){
+  const gf=Math.pow(1+ra,1/12), ff=Math.pow(1-fee,1/12), mf=gf*ff;
+  let bal=P0, basis=P0, m=0, C=C0;
+  const hist = record ? [{year:0, principal:P0, gains:0, total:P0}] : null;
+  if(bal>=Ptarget) return {months:0, basis, reached:true, hist};
+  while(bal<Ptarget && m<CAP){
+    bal=bal*mf;
+    if(lumpSum>0 && m===lumpMonth){ bal+=lumpSum; basis+=lumpSum; }
+    bal+=C; basis+=C; m++;
+    if(m%12===0) C=C*(1+cGrow);
+    if(record && m%12===0) hist.push({year:m/12, principal:basis, gains:Math.max(0,bal-basis), total:bal});
   }
-  return {reached:P>=target, months:month, P, basis, series};
+  if(record && m%12!==0) hist.push({year:+(m/12).toFixed(2), principal:basis, gains:Math.max(0,bal-basis), total:bal});
+  return {months:m, basis, reached:bal>=Ptarget, finalBal:bal, hist};
 }
 
-/* full FIRE computation with tax fixed-point on embedded gain fraction */
-function computeFIRE(p){
-  const mAcc = monthlyRealNet(p.rAcc, p.fee, p.infl, p.isReal);
-  const tax=p.tax/100, swr=p.swr/100;
-  let g=0.5, res=null;
-  for(let it=0; it<80; it++){
-    const grossAnnual = (p.Wnet*12)/(1 - g*tax);
-    const target = grossAnnual/swr;
-    const sim = simulate(p.P0, p.C, mAcc, target, p);
-    if(!sim.reached){ return {reached:false, target, mAcc}; }
-    const gNew = Math.max(0,(sim.P - sim.basis)/sim.P);
-    res={reached:true, target, months:sim.months, P:sim.P, basis:sim.basis, g:gNew,
-         series:sim.series, grossAnnual, mAcc};
-    if(Math.abs(gNew-g)<1e-6) break;
-    g=gNew;
+function computeTarget(P){
+  const P0=P.P0, C0=P.C0, cGrow=P.cGrow, W=P.W, passive=P.passive,
+        ra=P.ra, rw=P.rw, inf=P.inf, tax=P.tax, fee=P.fee, age=P.age,
+        lumpSum=P.lumpSum||0, lumpAge=P.lumpAge||0;
+  const Wnet = Math.max(0,(W-passive))*12;
+  if(Wnet<=0) return {feasible:true, Ptarget:0, months:0, T:0, basis:P0, gr:0, trivial:true};
+  const netFactor=(1+rw)*(1-fee)-(1+inf);
+  if(netFactor<=0) return {feasible:false, reason:'realreturn'};
+  let cap=Math.max(Wnet*20, P0*1.2), last=null;
+  for(let i=0;i<500;i++){
+    const lumpMonth = lumpSum>0 ? Math.max(0,Math.round((lumpAge-age)*12)) : -1;
+    const sim=accumulate(P0,C0,cGrow,cap,ra,fee,lumpSum,lumpMonth,false);
+    if(!sim.reached && sim.months>=CAP) return {feasible:false, reason:'unreachable', Ptarget:cap};
+    const T=sim.months/12;
+    const Wnom=Wnet*Math.pow(1+inf,T);
+    const Pafter=cap*(1+rw)*(1-fee);
+    let gr=(Pafter-sim.basis)/Pafter; gr=Math.max(0,Math.min(1,gr));
+    const denom=netFactor*(1-gr*tax);
+    if(denom<=0) return {feasible:false, reason:'realreturn'};
+    const Pnew=Wnom/denom;
+    last={T, months:sim.months, basis:sim.basis, gr};
+    if(Math.abs(Pnew-cap)/cap<1e-10){ cap=Pnew; break; }
+    cap=Pnew;
   }
-  return res;
+  return {feasible:true, Ptarget:cap, ...last};
 }
 
-/* value at given month from series (nearest) */
-function valAt(series, month){
-  if(month>=series.length) return null;
-  return series[month].P;
+function requiredContribution(P, retAge){
+  const T=retAge-P.age; if(T<=0) return null;
+  let lo=0, hi=2e6;
+  const yearsFor=(C)=>{ const r=computeTarget({...P, C0:C}); return (!r.feasible)?Infinity:r.months/12; };
+  if(yearsFor(hi)>T) return {infeasible:true};
+  for(let i=0;i<90;i++){ const mid=(lo+hi)/2; if(yearsFor(mid)>T) lo=mid; else hi=mid; }
+  return {C:(lo+hi)/2};
 }
 
-function run(){
-  CUR=document.getElementById('cur').value;
-  const p={
-    P0:num('P0'), C:num('C'), Wnet:num('Wnet'), rAcc:num('rAcc'), rWd:num('rWd'),
-    infl:num('infl'), tax:num('tax'), swr:num('swr'), fee:num('fee'), age:num('age'),
-    isReal:document.getElementById('isReal').checked,
-    one1amt:num('one1amt'), one1yr:num('one1yr'),
-    one2amt:num('one2amt'), one2yr:num('one2yr'),
-    cChgAmt:num('cChgAmt'), cChgYr:num('cChgYr')
+function coastFireCapital(target, ra, fee, age, retAge){
+  const T=retAge-age; if(T<=0) return target;
+  return target/Math.pow((1+ra)*(1-fee), T);
+}
+
+function buildProof(P, basis, rw, inf, tax, fee, years){
+  const rows=[]; let bal=P, B=basis;
+  for(let y=1;y<=years;y++){
+    const grossRet=bal*((1+rw)*(1-fee)-1);
+    const Pafter=bal*(1+rw)*(1-fee);
+    const end=bal*(1+inf);
+    const G=Pafter-end;
+    const gr=Pafter>0?(Pafter-B)/Pafter:0;
+    const taxAmt=Math.max(0,G)*Math.max(0,Math.min(1,gr))*tax;
+    const net=G-taxAmt;
+    const realGrowth=bal>0?(end/bal-1-inf):0;
+    B=B*(1-G/Pafter);
+    rows.push({y, start:bal, grossRet, gross:G, tax:taxAmt, net, end, realGrowth});
+    bal=end;
+  }
+  return rows;
+}
+
+function withdrawalSeries(P, inf, years){
+  const nominal=[], real=[], labels=[];
+  for(let y=0;y<=years;y++){ labels.push(y); nominal.push(P*Math.pow(1+inf,y)); real.push(P); }
+  return {labels, nominal, real};
+}
+
+/* ===================== charts ===================== */
+let chartAcc, chartWd;
+function drawAcc(hist, target){
+  const ctx=$('chartAcc').getContext('2d');
+  const gP=ctx.createLinearGradient(0,0,0,340); gP.addColorStop(0,'rgba(37,99,235,.35)'); gP.addColorStop(1,'rgba(37,99,235,.02)');
+  const gG=ctx.createLinearGradient(0,0,0,340); gG.addColorStop(0,'rgba(8,145,178,.35)'); gG.addColorStop(1,'rgba(8,145,178,.02)');
+  const data={ labels:hist.map(h=>h.year), datasets:[
+    {label:'קרן', data:hist.map(h=>Math.round(h.principal)), backgroundColor:gP, borderColor:'#2563eb', borderWidth:2, fill:true, stack:'s', pointRadius:0, tension:.25},
+    {label:'רווחים', data:hist.map(h=>Math.round(h.gains)), backgroundColor:gG, borderColor:'#0891b2', borderWidth:2, fill:true, stack:'s', pointRadius:0, tension:.25},
+    {label:'יעד', data:hist.map(()=>Math.round(target)), borderColor:'#d97706', borderWidth:2, borderDash:[6,5], fill:false, pointRadius:0, stack:'t'}
+  ]};
+  const opts=commonOpts('שנים מהיום');
+  if(chartAcc){chartAcc.data=data;chartAcc.options=opts;chartAcc.update();}
+  else chartAcc=new Chart(ctx,{type:'line',data,options:opts});
+}
+function drawWd(series){
+  const ctx=$('chartWd').getContext('2d');
+  const gN=ctx.createLinearGradient(0,0,0,300); gN.addColorStop(0,'rgba(37,99,235,.30)'); gN.addColorStop(1,'rgba(37,99,235,.02)');
+  const data={ labels:series.labels, datasets:[
+    {label:'נומינלי', data:series.nominal.map(Math.round), backgroundColor:gN, borderColor:'#2563eb', borderWidth:2, fill:true, pointRadius:0, tension:.2},
+    {label:'ריאלי', data:series.real.map(Math.round), borderColor:'#059669', borderWidth:2.5, borderDash:[5,4], fill:false, pointRadius:0}
+  ]};
+  const opts=commonOpts('שנים מתחילת המשיכה', false);
+  if(chartWd){chartWd.data=data;chartWd.options=opts;chartWd.update();}
+  else chartWd=new Chart(ctx,{type:'line',data,options:opts});
+}
+function commonOpts(xTitle, stacked=true){
+  return {
+    responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+    plugins:{ legend:{display:false},
+      tooltip:{ rtl:true, backgroundColor:'#0f1b33', padding:11, cornerRadius:10, titleColor:'#fff', bodyColor:'#cbd5e8',
+        callbacks:{ title:it=>'שנה '+it[0].label, label:it=>' '+it.dataset.label+': '+shekel(it.raw) } } },
+    scales:{
+      x:{grid:{color:'rgba(15,27,51,.05)'}, ticks:{color:'#6b7896', maxTicksLimit:12}, title:{display:true, text:xTitle, color:'#9aa6c0', font:{size:11}}},
+      y:{stacked, grid:{color:'rgba(15,27,51,.06)'}, ticks:{color:'#6b7896', callback:v=> nf1.format(v/1e6)+' מ׳'}, title:{display:true, text:'שווי התיק (מיליוני ₪)', color:'#9aa6c0', font:{size:11}}}
+    }
   };
-  const R=computeFIRE(p);
-  const el=document.getElementById('results');
+}
 
-  if(!R.reached){
-    el.innerHTML=`<h2>תוצאות</h2><div class="err">⚠️ עם הפרמטרים הנוכחיים לא ניתן להגיע ליעד הקרן (${CUR}${fmt(R.target)}) בתוך 100 שנה.<br>ההפקדה החודשית או התשואה נמוכות מדי ביחס למשיכה המבוקשת. נסה להגדיל הפקדה / להקטין משיכה.</div>`;
+/* ===================== heatmap color ===================== */
+function heat(t, min, max){
+  const x=Math.max(0,Math.min(1,(t-min)/(max-min||1)));
+  // green (short) -> amber -> red (long)
+  const stops=[[5,150,105],[217,119,6],[225,29,72]];
+  let c;
+  if(x<0.5){const k=x/0.5;c=stops[0].map((s,i)=>Math.round(s+(stops[1][i]-s)*k));}
+  else{const k=(x-0.5)/0.5;c=stops[1].map((s,i)=>Math.round(s+(stops[2][i]-s)*k));}
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+/* ===================== render ===================== */
+function readInputs(){
+  return {
+    P0:val('p0'), C0:val('c'), W:val('w'), passive:val('passive'),
+    ra:pct('ra'), rw:pct('rw'), inf:pct('inf'), tax:pct('tax'), fee:pct('fee'),
+    age:val('age'), cGrow:pct('cgrow'), lumpSum:val('lump'), lumpAge:val('lumpage')
+  };
+}
+
+function kpiCard(cls, ic, lbl, valTxt, sub){
+  return `<div class="kpi ${cls}"><div class="k-top"><div class="k-ic">${ic}</div><div class="k-lbl">${lbl}</div></div>
+    <div class="k-val ${valTxt.length>12?'sm':''}">${valTxt}</div>${sub?`<div class="k-sub">${sub}</div>`:''}</div>`;
+}
+
+function render(){
+  const P=readInputs();
+  const banner=$('banner');
+  const res=computeTarget(P);
+
+  if(!res.feasible){
+    const msg = res.reason==='realreturn'
+      ? 'התשואה בשלב המשיכה בניכוי דמי ניהול אינה מכסה את האינפלציה — לא ניתן לשמר הון ריאלי. הגדל את תשואת המשיכה, או הקטן דמי ניהול / אינפלציה.'
+      : 'היעד אינו בר-השגה בטווח של 100 שנה עם הנתונים הנוכחיים. הגדל הפקדה חודשית / הון התחלתי, או הקטן את המשיכה המבוקשת.';
+    banner.className='banner err show';
+    banner.innerHTML=`<span class="b-ic">⛔</span><div><b>לא ניתן לחשב יעד:</b> ${msg}</div>`;
+    $('verdict').innerHTML='<span class="warn">⚠️ התרחיש הנוכחי אינו ישים.</span> ראה פירוט בהודעה למעלה.';
+    $('heroMini').innerHTML=''; $('kpiGrid').innerHTML='';
+    ['proofTbl','sensRw','sensRa','sensInf','sensC'].forEach(id=>$(id).querySelector('tbody').innerHTML='');
+    $('matrix').innerHTML='';
+    if(chartAcc){chartAcc.destroy();chartAcc=null;} if(chartWd){chartWd.destroy();chartWd=null;}
     return;
   }
+  banner.className='banner';
 
-  const yrs=Math.floor(R.months/12), mos=R.months%12;
-  const ageAtFire=(p.age + R.months/12);
-  const ageWhole=Math.floor(ageAtFire), ageMo=Math.round((ageAtFire-ageWhole)*12);
+  const target=res.Ptarget, months=res.months, T=res.T, basis=res.basis;
+  const gains=Math.max(0,target-basis);
+  const Wannual=P.W*12;
+  const WannualNet=Math.max(0,(P.W-P.passive))*12;
+  const realTarget=target/Math.pow(1+P.inf,T);
+  const fireMult= WannualNet>0 ? target/WannualNet : 0;
+  const grossWdY = target*((1+P.rw)*(1-P.fee)-1);
+  const effRate = target>0 ? (WannualNet*Math.pow(1+P.inf,T))/target : 0; // nominal net withdrawal / capital at retirement
+  const ageRet = P.age + T;
 
-  /* milestones */
-  const msMonths=[12,36,60,120].filter(m=>m<=R.months);
-  let msRows='';
-  msMonths.forEach(m=>{
-    const v=valAt(R.series,m);
-    if(v!=null) msRows+=`<tr><td>שנה ${m/12}</td><td>${CUR}${fmt(v)}</td><td class="mut">${(v/R.target*100).toFixed(0)}% מהיעד</td></tr>`;
+  /* ----- verdict ----- */
+  $('verdict').innerHTML =
+    `בהנחות הנוכחיות תגיע ל<b>חופש כלכלי</b> בעוד <b>${yearsMonths(months)}</b> ` +
+    `(בגיל <b>${nf1.format(ageRet)}</b>), עם קרן נדרשת של <b>${shekelShort(target)}</b> ` +
+    `<span class="ok">(≈ ${shekelShort(realTarget)} בכוח קנייה של היום)</span>.`;
+
+  $('heroMini').innerHTML =
+    `<div class="m"><div class="l">זמן ליעד</div><div class="v">${T<1?Math.round(months)+' ח׳':nf1.format(T)+' שנים'}</div></div>` +
+    `<div class="m"><div class="l">גיל בפרישה</div><div class="v">${nf1.format(ageRet)}</div></div>` +
+    `<div class="m"><div class="l">מכפיל FIRE</div><div class="v">${fireMult>0?nf.format(Math.round(fireMult))+'×':'—'}</div></div>`;
+
+  /* ----- KPI grid ----- */
+  const retAgeInput = val('retage');
+  const useTarget = $('useTargetAge').checked;
+  const coast = coastFireCapital(target, P.ra, P.fee, P.age, useTarget?retAgeInput:ageRet);
+
+  let reqC=null;
+  if(useTarget){ const rc=requiredContribution(P, retAgeInput); reqC=rc; }
+
+  const cards=[
+    kpiCard('a-brand','⏱️','זמן להגעה ליעד', yearsMonths(months), '≈ '+nf1.format(T)+' שנים'),
+    kpiCard('a-green','🎂','גיל מוערך בפרישה', nf1.format(ageRet), 'גיל נוכחי '+nf.format(P.age)),
+    kpiCard('a-violet','🎯','קרן נדרשת (ברוטו)', shekelShort(target), shekel(target)),
+    kpiCard('a-cyan','💎','קרן בכוח קנייה של היום', shekelShort(realTarget), 'ריאלי · '+shekel(realTarget)),
+    kpiCard('a-brand','💰','סך הפקדות עד פרישה', shekelShort(basis), shekel(basis)),
+    kpiCard('a-green','📈','סך רווחים עד פרישה', shekelShort(gains), pctS(gains/target,0)+' מהקרן'),
+    kpiCard('a-violet','✖️','מכפיל FIRE', fireMult>0?nf.format(Math.round(fireMult))+'×':'—', 'פי כמה מההוצאה השנתית'),
+    kpiCard('a-amber','📉','שיעור משיכה אפקטיבי', pctS(effRate,2), 'נטו מתוך הקרן בפרישה'),
+    kpiCard('a-cyan','🏦','משיכה שנתית ברוטו', shekelShort(grossWdY), 'בשנה הראשונה בפרישה'),
+    kpiCard('a-brand','🗓️','משיכה חודשית ברוטו', shekelShort(grossWdY/12), 'לפני מס · בפרישה'),
+    kpiCard('a-violet','🌱','Coast FIRE', shekelShort(coast), 'הון היום שיספיק ללא הפקדות'+(useTarget?' עד '+nf.format(retAgeInput):'')),
+    useTarget
+      ? kpiCard('a-rose','🎯','הפקדה נדרשת לגיל '+nf.format(retAgeInput), (reqC&&!reqC.infeasible)?shekelShort(reqC.C)+'/ח׳':'לא ישים', (reqC&&reqC.infeasible)?'לא ניתן להגיע בטווח':'לחודש')
+      : kpiCard('a-rose','💵','משיכה נטו נדרשת מהתיק', shekelShort(WannualNet/12)+'/ח׳', P.passive>0?'לאחר קיזוז הכנסה פסיבית':'לפני הכנסה פסיבית')
+  ];
+  $('kpiGrid').innerHTML=cards.join('');
+
+  /* ----- charts ----- */
+  const simRec=accumulate(P.P0,P.C0,P.cGrow,target,P.ra,P.fee,P.lumpSum, P.lumpSum>0?Math.max(0,Math.round((P.lumpAge-P.age)*12)):-1, true);
+  drawAcc(simRec.hist, target);
+  drawWd(withdrawalSeries(target, P.inf, 15));
+
+  /* ----- proof table ----- */
+  const proof=buildProof(target, basis, P.rw, P.inf, P.tax, P.fee, 3);
+  $('proofTbl').querySelector('tbody').innerHTML = proof.map(r=>`<tr>
+    <td>שנה ${r.y}</td>
+    <td class="tbl-num">${shekel(r.start)}</td>
+    <td class="tbl-num pos">${shekel(r.grossRet)}</td>
+    <td class="tbl-num">${shekel(r.gross)}</td>
+    <td class="tbl-num neg">${shekel(-r.tax)}</td>
+    <td class="tbl-num pos">${shekel(r.net)}</td>
+    <td class="tbl-num">${shekel(r.end)}</td>
+    <td><span class="pill zero">${(r.realGrowth*100).toFixed(2)}%</span></td>
+  </tr>`).join('');
+
+  /* ----- sensitivity: withdrawal return ----- */
+  fillSens('sensRw', [-0.015,-0.0075,0,0.0075,0.015], d=>{
+    const r=computeTarget({...P, rw:P.rw+d});
+    return {ok:r.feasible, cells:[pctS(P.rw+d,2), r.feasible?shekelShort(r.Ptarget):'לא ישים', r.feasible?yearsMonths(r.months):'—'], d};
   });
-  msRows+=`<tr style="font-weight:700"><td class="pos">🎯 יעד FIRE (שנה ${(R.months/12).toFixed(1)})</td><td class="pos">${CUR}${fmt(R.P)}</td><td class="pos">100%</td></tr>`;
+  /* accumulation return */
+  fillSens('sensRa', [-0.015,-0.0075,0,0.0075,0.015], d=>{
+    const r=computeTarget({...P, ra:P.ra+d});
+    return {ok:r.feasible, cells:[pctS(P.ra+d,2), r.feasible?yearsMonths(r.months):'—', r.feasible?nf1.format(P.age+r.T):'—'], d};
+  });
+  /* inflation */
+  fillSens('sensInf', [-0.01,-0.005,0,0.005,0.01], d=>{
+    const r=computeTarget({...P, inf:P.inf+d});
+    return {ok:r.feasible, cells:[pctS(P.inf+d,2), r.feasible?shekelShort(r.Ptarget):'לא ישים', r.feasible?yearsMonths(r.months):'—'], d};
+  });
+  /* contribution */
+  const cSteps=[-0.3,-0.15,0,0.15,0.3];
+  fillSensC('sensC', cSteps, frac=>{
+    const c2=P.C0*(1+frac);
+    const r=computeTarget({...P, C0:c2});
+    return {ok:r.feasible, cells:[shekelShort(c2), r.feasible?yearsMonths(r.months):'—', r.feasible?nf1.format(P.age+r.T):'—'], frac};
+  });
 
-  /* sensitivity */
-  const base=R.months/12;
-  function scen(mod){ const q={...p,...mod}; const r=computeFIRE(q); return r.reached? r.months/12 : null; }
-  const sHi=scen({rAcc:p.rAcc+2});
-  const sLo=scen({rAcc:p.rAcc-2});
-  const sAdv=scen({tax:p.tax+5, infl:p.infl+1});
-  const dTxt=(v)=>{ if(v==null) return '<span class="neg">לא מושג</span>';
-    const d=v-base; const s=d>0?'+':''; const cls=d>0?'neg':'pos';
-    return `${v.toFixed(1)} שנים <span class="${cls}">(${s}${d.toFixed(1)})</span>`; };
-
-  /* net-vs-gross withdrawal explainer */
-  const grossM=R.grossAnnual/12;
-  const taxDrag=(1-R.Wnet/grossM)*100;
-
-  el.innerHTML=`
-    <h2>תוצאות</h2>
-    <div class="headline">
-      <div class="kpi big">
-        <div class="lbl">⏳ שורה תחתונה — זמן עד לחופש כלכלי</div>
-        <div class="val">${yrs} שנים ${mos} חוד'</div>
-        <div class="sub">גיל מוערך בהגעה: ${ageWhole} ו-${ageMo} חוד'</div>
-      </div>
-      <div class="kpi">
-        <div class="lbl">🎯 יעד הקרן הנדרש (ברוטו)</div>
-        <div class="val">${CUR}${fmt(R.target)}</div>
-        <div class="sub">מגן ממס ומאינפלציה • משיכה ${CUR}${fmt(p.Wnet)}/חוד' נטו</div>
-      </div>
-    </div>
-
-    <div class="headline">
-      <div class="kpi">
-        <div class="lbl">משיכה חודשית ברוטו נדרשת</div>
-        <div class="val" style="font-size:22px">${CUR}${fmt(grossM)}</div>
-        <div class="sub">שחיקת מס אפקטיבית: ${taxDrag.toFixed(1)}% • שיעור רווח מגולם בתיק: ${(R.g*100).toFixed(0)}%</div>
-      </div>
-      <div class="kpi">
-        <div class="lbl">סה"כ הפקדות עד ליעד (קרן)</div>
-        <div class="val" style="font-size:22px">${CUR}${fmt(R.basis)}</div>
-        <div class="sub">מתוכו רווחי השקעה: ${CUR}${fmt(R.P-R.basis)}</div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <h3>📈 מסלול צמיחת התיק <span class="badge">ערכים ריאליים</span></h3>
-      <canvas id="chart"></canvas>
-    </div>
-
-    <div class="sec">
-      <h3>🧱 טבלת אבני דרך (Milestones)</h3>
-      <table><thead><tr><th>תקופה</th><th>שווי תיק (ריאלי)</th><th>התקדמות</th></tr></thead><tbody>${msRows}</tbody></table>
-    </div>
-
-    <div class="sec">
-      <h3>🔀 ניתוח רגישות</h3>
-      <p class="desc">בסיס: ${base.toFixed(1)} שנים. כיצד משתנה מועד היעד בתרחישים שונים:</p>
-      <table><thead><tr><th>תרחיש</th><th>זמן ליעד</th></tr></thead><tbody>
-        <tr><td>תשואת צבירה גבוהה ב-2% (${(p.rAcc+2).toFixed(1)}%)</td><td>${dTxt(sHi)}</td></tr>
-        <tr><td>תשואת צבירה נמוכה ב-2% (${(p.rAcc-2).toFixed(1)}%)</td><td>${dTxt(sLo)}</td></tr>
-        <tr><td>מס ואינפלציה מפתיעים לרעה (מס +5%, אינפלציה +1%)</td><td>${dTxt(sAdv)}</td></tr>
-      </tbody></table>
-    </div>
-
-    <div class="note">
-      <b>מתודולוגיה:</b> יעד הקרן חושב לפי כלל המשיכה הבטוחה (SWR): יעד = משיכה שנתית ברוטו ÷ SWR.
-      המשיכה הברוטו מחושבת מהמשיכה הנטו המבוקשת ע"י פיצול התיק לרכיב קרן (פטור ממס) ולרכיב רווח (חייב במס),
-      כך שהסכום המבוקש מתקבל נטו ביד. דמי הניהול מנוכים מהתשואה הברוטו, והצבירה מחושבת בריבית-דריבית חודשית.
-    </div>
-  `;
-
-  drawChart(R.series, R.target);
+  /* ----- 2D matrix: ra (rows) x contribution (cols) -> years ----- */
+  buildMatrix(P);
 }
 
-/* ---------- lightweight canvas line chart ---------- */
-function drawChart(series, target){
-  const cv=document.getElementById('chart');
-  const dpr=window.devicePixelRatio||1;
-  const W=cv.clientWidth, H=230;
-  cv.width=W*dpr; cv.height=H*dpr;
-  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
-  const padL=54,padR=16,padT=16,padB=26;
-  const n=series.length;
-  const maxY=Math.max(target, series[n-1].P)*1.05;
-  const x=i=> padL + (W-padL-padR)*(series[i].m/series[n-1].m || 0);
-  const y=v=> H-padB - (H-padT-padB)*(v/maxY);
-
-  ctx.clearRect(0,0,W,H);
-  // grid + y labels
-  ctx.strokeStyle='#33415577'; ctx.fillStyle='#94a3b8'; ctx.font='11px Segoe UI'; ctx.textAlign='right';
-  for(let k=0;k<=4;k++){
-    const val=maxY*k/4, yy=y(val);
-    ctx.beginPath();ctx.moveTo(padL,yy);ctx.lineTo(W-padR,yy);ctx.stroke();
-    ctx.fillText(CUR+fmtM(val), padL-6, yy+4);
-  }
-  // target line
-  ctx.strokeStyle='#34d399'; ctx.setLineDash([5,4]); ctx.beginPath();
-  ctx.moveTo(padL,y(target));ctx.lineTo(W-padR,y(target));ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle='#34d399'; ctx.textAlign='left'; ctx.fillText('יעד', padL+4, y(target)-4);
-  // area + line
-  const grad=ctx.createLinearGradient(0,padT,0,H-padB);
-  grad.addColorStop(0,'#22d3ee55'); grad.addColorStop(1,'#22d3ee05');
-  ctx.beginPath(); ctx.moveTo(x(0),y(series[0].P));
-  for(let i=1;i<n;i++) ctx.lineTo(x(i),y(series[i].P));
-  ctx.lineTo(x(n-1),H-padB); ctx.lineTo(x(0),H-padB); ctx.closePath();
-  ctx.fillStyle=grad; ctx.fill();
-  ctx.beginPath(); ctx.moveTo(x(0),y(series[0].P));
-  for(let i=1;i<n;i++) ctx.lineTo(x(i),y(series[i].P));
-  ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2.5; ctx.stroke();
-  // x labels (years)
-  ctx.fillStyle='#94a3b8'; ctx.textAlign='center';
-  const totYears=series[n-1].m/12;
-  const step=totYears<=6?1:(totYears<=15?2:5);
-  for(let yr=0; yr<=totYears; yr+=step){
-    const mi=Math.min(n-1,Math.round(yr*12));
-    ctx.fillText(yr+'ש', x(mi), H-8);
-  }
+function fillSens(id, deltas, fn){
+  const rows=deltas.map(d=>{
+    const o=fn(d);
+    const isBase=Math.abs(d)<1e-9;
+    const label = isBase?'בסיס':(d>0?'+'+nf1.format(d*100).replace(/,/g,'.')+'%':nf1.format(d*100).replace(/,/g,'.')+'%');
+    return `<tr class="${isBase?'row-base':''}"><td>${label}</td>${o.cells.map(c=>`<td class="tbl-num">${c}</td>`).join('')}</tr>`;
+  });
+  $(id).querySelector('tbody').innerHTML=rows.join('');
+}
+function fillSensC(id, fracs, fn){
+  const rows=fracs.map(f=>{
+    const o=fn(f);
+    const isBase=Math.abs(f)<1e-9;
+    const label=isBase?'בסיס':(f>0?'+'+Math.round(f*100)+'%':Math.round(f*100)+'%');
+    return `<tr class="${isBase?'row-base':''}"><td>${label}</td>${o.cells.map(c=>`<td class="tbl-num">${c}</td>`).join('')}</tr>`;
+  });
+  $(id).querySelector('tbody').innerHTML=rows.join('');
 }
 
-/* run once with defaults */
-window.addEventListener('load', run);
+function buildMatrix(P){
+  const raVals=[-0.02,-0.01,0,0.01,0.02].map(d=>P.ra+d);
+  const cVals=[-0.4,-0.2,0,0.2,0.4].map(f=>P.C0*(1+f));
+  const results=[]; let mn=Infinity,mx=-Infinity;
+  raVals.forEach(ra=>{ const row=[]; cVals.forEach(c=>{
+    const r=computeTarget({...P, ra, C0:c});
+    const t=r.feasible? r.T : null;
+    if(t!=null){mn=Math.min(mn,t);mx=Math.max(mx,t);}
+    row.push(t);
+  }); results.push(row); });
+  let html='<thead><tr><th class="corner">תשואה \\ הפקדה</th>';
+  cVals.forEach(c=> html+=`<th>${shekelShort(c)}</th>`);
+  html+='</tr></thead><tbody>';
+  results.forEach((row,i)=>{
+    html+=`<tr><td class="rowhead">${pctS(raVals[i],1)}</td>`;
+    row.forEach(t=>{
+      if(t==null) html+='<td class="cell" style="background:#94a3b8">—</td>';
+      else html+=`<td class="cell" style="background:${heat(t,mn,mx)}">${nf1.format(t)}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  $('matrix').innerHTML=html;
+}
+
+/* ===================== wiring ===================== */
+const IDS=['p0','c','w','passive','ra','rw','inf','tax','fee','age','cgrow','lump','lumpage','retage'];
+IDS.forEach(id=> $(id).addEventListener('input', render));
+$('useTargetAge').addEventListener('change', e=>{
+  $('targetAgeField').style.display = e.target.checked ? '' : 'none';
+  render();
+});
+const DEFAULTS={p0:100000,c:5000,w:15000,passive:0,ra:7,rw:5,inf:2.5,tax:25,fee:0.5,age:30,cgrow:2,lump:0,lumpage:40,retage:50};
+$('resetBtn').addEventListener('click', ()=>{
+  Object.entries(DEFAULTS).forEach(([k,v])=> $(k).value=v);
+  $('useTargetAge').checked=false; $('targetAgeField').style.display='none';
+  render();
+});
+render();
 </script>
 </body>
 </html>
